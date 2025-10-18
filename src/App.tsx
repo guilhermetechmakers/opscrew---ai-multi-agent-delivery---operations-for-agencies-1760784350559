@@ -11,6 +11,7 @@ import ProjectBoard from "@/pages/ProjectBoard";
 import AgentManagement from "@/pages/AgentManagement";
 import AgentExecutions from "@/pages/AgentExecutions";
 import MeetingSummary from "@/pages/MeetingSummary";
+import ClientPortal from "@/pages/ClientPortal";
 import NotFound from "@/pages/NotFound";
 
 // React Query client with optimal defaults
@@ -51,6 +52,7 @@ export default function App() {
           </Route>
           
           {/* Client Portal Routes */}
+          <Route path="/portal/:projectId" element={<ClientPortal />} />
           <Route path="/portal" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="techstart" element={<Dashboard />} />
