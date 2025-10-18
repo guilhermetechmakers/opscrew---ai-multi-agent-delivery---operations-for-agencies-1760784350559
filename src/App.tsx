@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AuthMiddleware } from "@/components/auth/AuthMiddleware";
 import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
@@ -11,6 +12,8 @@ import PasswordReset from "@/pages/PasswordReset";
 import ForgotPassword from "@/pages/ForgotPassword";
 import Setup2FA from "@/pages/Setup2FA";
 import SessionManagement from "@/pages/SessionManagement";
+import AccountSuspended from "@/pages/AccountSuspended";
+import Unauthorized from "@/pages/Unauthorized";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
 import IntakeChat from "@/pages/IntakeChat";
@@ -20,6 +23,7 @@ import AgentManagement from "@/pages/AgentManagement";
 import AgentExecutions from "@/pages/AgentExecutions";
 import MeetingSummary from "@/pages/MeetingSummary";
 import ClientPortal from "@/pages/ClientPortal";
+import AuthTest from "@/pages/AuthTest";
 import NotFound from "@/pages/NotFound";
 
 // React Query client with optimal defaults
@@ -50,9 +54,11 @@ export default function App() {
             
             {/* Protected routes with dashboard layout */}
             <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <DashboardLayout />
-              </ProtectedRoute>
+              <AuthMiddleware requireAuth={true}>
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              </AuthMiddleware>
             }>
               <Route index element={<Dashboard />} />
               <Route path="intake" element={<IntakeChat />} />
@@ -69,17 +75,27 @@ export default function App() {
             
             {/* 2FA Setup Route */}
             <Route path="/setup-2fa" element={
-              <ProtectedRoute>
-                <Setup2FA />
-              </ProtectedRoute>
+              <AuthMiddleware requireAuth={true}>
+                <ProtectedRoute>
+                  <Setup2FA />
+                </ProtectedRoute>
+              </AuthMiddleware>
             } />
             
             {/* Session Management Route */}
             <Route path="/sessions" element={
-              <ProtectedRoute>
-                <SessionManagement />
-              </ProtectedRoute>
+              <AuthMiddleware requireAuth={true}>
+                <ProtectedRoute>
+                  <SessionManagement />
+                </ProtectedRoute>
+              </AuthMiddleware>
             } />
+            
+            {/* Account Suspended Route */}
+            <Route path="/account-suspended" element={<AccountSuspended />} />
+            
+            {/* Unauthorized Route */}
+            <Route path="/unauthorized" element={<Unauthorized />} />
             
             {/* Client Portal Routes */}
             <Route path="/portal/:projectId" element={<ClientPortal />} />
@@ -90,6 +106,11 @@ export default function App() {
               <Route path="ecommerce" element={<Dashboard />} />
               <Route path="mobile" element={<Dashboard />} />
             </Route>
+            
+            {/* Development Routes */}
+            {import.meta.env.DEV && (
+              <Route path="/auth-test" element={<AuthTest />} />
+            )}
             
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />

@@ -6,6 +6,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase, type AuthUser, type AuthSession } from '@/lib/supabase'
 import type { UserProfile } from '@/types/database/user_profiles'
+import { authAPI } from '@/api/auth'
 import { toast } from 'sonner'
 
 interface AuthContextType {
@@ -135,13 +136,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign up
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: metadata
-        }
-      })
+      const { error } = await authAPI.signUp(email, password, metadata)
 
       if (error) {
         toast.error(error.message)
@@ -160,10 +155,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign in
   const signIn = async (email: string, password: string, rememberMe = false) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { error } = await authAPI.signIn(email, password)
 
       if (error) {
         toast.error(error.message)
@@ -182,12 +174,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // OAuth sign in
   const signInWithOAuth = async (provider: 'google' | 'apple') => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`
-        }
-      })
+      const { error } = await authAPI.signInWithOAuth(provider)
 
       if (error) {
         toast.error(error.message)
@@ -205,7 +192,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign out
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
+      const { error } = await authAPI.signOut()
       if (error) {
         toast.error(error.message)
         return
@@ -224,9 +211,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Reset password
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
-      })
+      const { error } = await authAPI.resetPassword(email)
 
       if (error) {
         toast.error(error.message)
@@ -245,9 +230,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Update password
   const updatePassword = async (password: string) => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password
-      })
+      const { error } = await authAPI.updatePassword(password)
 
       if (error) {
         toast.error(error.message)

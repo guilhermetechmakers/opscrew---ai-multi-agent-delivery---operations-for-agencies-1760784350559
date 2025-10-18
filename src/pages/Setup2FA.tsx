@@ -9,11 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bot, Shield, Smartphone, Key, CheckCircle, Loader2, ArrowLeft, Copy, Download } from "lucide-react"
+import { Bot, Shield, Smartphone, Key, CheckCircle, Loader2, ArrowLeft, Copy, Download, QrCode } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useTwoFactorSecrets, useUpdateTwoFactorSecrets } from "@/hooks/useAuthQueries"
 import { motion } from "motion/react"
 import { toast } from "sonner"
+import { generateTOTPSecret, generateBackupCodes, generateTOTPQRData, formatSecretForDisplay, verifyTOTPToken, generateSMSVerificationCode } from "@/lib/totp-utils"
+import { twoFARateLimiter, getRateLimitKey } from "@/lib/rate-limit"
 
 const totpSchema = z.object({
   code: z.string().length(6, "Code must be 6 digits").regex(/^\d+$/, "Code must contain only numbers")
@@ -34,6 +36,9 @@ export default function Setup2FA() {
   const [qrCode, setQrCode] = useState("")
   const [backupCodes, setBackupCodes] = useState<string[]>([])
   const [isSetupComplete, setIsSetupComplete] = useState(false)
+  const [totpSecret, setTotpSecret] = useState("")
+  const [smsCode, setSmsCode] = useState("")
+  const [isGeneratingSecret, setIsGeneratingSecret] = useState(false)
 
   const { data: secrets, isLoading: loadingSecrets } = useTwoFactorSecrets()
   const updateSecretsMutation = useUpdateTwoFactorSecrets()
@@ -57,9 +62,60 @@ export default function Setup2FA() {
     }
   }, [user, secrets, navigate])
 
+  // Generate TOTP secret when component mounts
+  useEffect(() => {
+    if (activeTab === "totp" && !totpSecret && !secrets?.totp_secret) {
+      generateNewTOTPSecret()
+    }
+  }, [activeTab, totpSecret, secrets?.totp_secret])
+
+  const generateNewTOTPSecret = async () => {
+    setIsGeneratingSecret(true)
+    try {
+      const secret = generateTOTPSecret()
+      const codes = generateBackupCodes()
+      
+      setTotpSecret(secret)
+      setBackupCodes(codes)
+      
+      // Generate QR code data
+      const qrData = generateTOTPQRData(secret, user?.email || '')
+      setQrCode(qrData)
+      
+      // Store secret in database
+      await updateSecretsMutation.mutateAsync({
+        totp_secret: secret,
+        totp_backup_codes: codes
+      })
+      
+      toast.success("TOTP secret generated successfully!")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to generate TOTP secret")
+    } finally {
+      setIsGeneratingSecret(false)
+    }
+  }
+
   const handleTotpSubmit = async (data: TotpFormData) => {
     try {
-      // Verify TOTP code and enable 2FA
+      // Check rate limiting
+      const rateLimitKey = getRateLimitKey('TWO_FA', user?.id || '')
+      const rateLimit = twoFARateLimiter.isAllowed(rateLimitKey)
+      
+      if (!rateLimit.allowed) {
+        toast.error("Too many attempts. Please try again later.")
+        return
+      }
+
+      // Verify TOTP code
+      const isValid = verifyTOTPToken(data.code, { secret: totpSecret })
+      
+      if (!isValid) {
+        toast.error("Invalid verification code. Please try again.")
+        return
+      }
+
+      // Enable TOTP 2FA
       await updateSecretsMutation.mutateAsync({
         totp_enabled: true,
         totp_enabled_at: new Date().toISOString()
@@ -74,7 +130,29 @@ export default function Setup2FA() {
 
   const handleSmsSubmit = async (data: SmsFormData) => {
     try {
-      // Verify SMS code and enable 2FA
+      // Check rate limiting
+      const rateLimitKey = getRateLimitKey('TWO_FA', user?.id || '')
+      const rateLimit = twoFARateLimiter.isAllowed(rateLimitKey)
+      
+      if (!rateLimit.allowed) {
+        toast.error("Too many attempts. Please try again later.")
+        return
+      }
+
+      // Generate and send SMS code (in production, integrate with SMS service)
+      const verificationCode = generateSMSVerificationCode()
+      setSmsCode(verificationCode)
+      
+      // For demo purposes, show the code
+      toast.info(`SMS verification code: ${verificationCode}`)
+      
+      // Verify SMS code
+      if (data.code !== verificationCode) {
+        toast.error("Invalid verification code. Please try again.")
+        return
+      }
+
+      // Enable SMS 2FA
       await updateSecretsMutation.mutateAsync({
         sms_enabled: true,
         sms_enabled_at: new Date().toISOString(),
@@ -89,8 +167,8 @@ export default function Setup2FA() {
   }
 
   const generateQrCode = () => {
-    if (secrets?.totp_secret) {
-      const qrData = `otpauth://totp/OpsCrew:${user?.email}?secret=${secrets.totp_secret}&issuer=OpsCrew`
+    if (totpSecret) {
+      const qrData = generateTOTPQRData(totpSecret, user?.email || '')
       setQrCode(qrData)
     }
   }
@@ -189,56 +267,132 @@ export default function Setup2FA() {
                 </Alert>
 
                 <div className="space-y-4">
-                  <div className="text-center">
-                    <Button 
-                      onClick={generateQrCode}
-                      variant="outline"
-                      className="mb-4"
-                    >
-                      Generate QR Code
-                    </Button>
-                    {qrCode && (
-                      <div className="bg-white p-4 rounded-lg inline-block">
-                        {/* QR Code would be generated here */}
-                        <div className="w-48 h-48 bg-gray-100 flex items-center justify-center">
-                          <span className="text-sm text-gray-500">QR Code</span>
+                  {!totpSecret ? (
+                    <div className="text-center">
+                      <Button 
+                        onClick={generateNewTOTPSecret}
+                        variant="outline"
+                        className="mb-4"
+                        disabled={isGeneratingSecret}
+                      >
+                        {isGeneratingSecret ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Key className="w-4 h-4 mr-2" />
+                            Generate Secret
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-center space-y-4">
+                        <div className="bg-white p-4 rounded-lg inline-block">
+                          {/* QR Code would be generated here */}
+                          <div className="w-48 h-48 bg-gray-100 flex items-center justify-center">
+                            <QrCode className="w-12 h-12 text-gray-400" />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">
+                            Scan this QR code with your authenticator app, or enter this secret key manually:
+                          </p>
+                          <div className="bg-muted p-3 rounded-lg font-mono text-sm break-all">
+                            {formatSecretForDisplay(totpSecret)}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(totpSecret)
+                              toast.success("Secret copied to clipboard!")
+                            }}
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy Secret
+                          </Button>
                         </div>
                       </div>
-                    )}
-                  </div>
 
-                  <form onSubmit={totpForm.handleSubmit(handleTotpSubmit)} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="totp-code">Enter 6-digit code from your app</Label>
-                      <Input
-                        id="totp-code"
-                        placeholder="123456"
-                        maxLength={6}
-                        className="text-center text-lg tracking-widest"
-                        {...totpForm.register("code")}
-                      />
-                      {totpForm.formState.errors.code && (
-                        <p className="text-sm text-destructive">
-                          {totpForm.formState.errors.code.message}
-                        </p>
-                      )}
-                    </div>
+                      <form onSubmit={totpForm.handleSubmit(handleTotpSubmit)} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="totp-code">Enter 6-digit code from your app</Label>
+                          <Input
+                            id="totp-code"
+                            placeholder="123456"
+                            maxLength={6}
+                            className="text-center text-lg tracking-widest"
+                            {...totpForm.register("code")}
+                          />
+                          {totpForm.formState.errors.code && (
+                            <p className="text-sm text-destructive">
+                              {totpForm.formState.errors.code.message}
+                            </p>
+                          )}
+                        </div>
 
-                    <Button 
-                      type="submit" 
-                      className="w-full h-12 btn-primary"
-                      disabled={updateSecretsMutation.isPending}
-                    >
-                      {updateSecretsMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Enabling...
-                        </>
-                      ) : (
-                        "Enable TOTP 2FA"
+                        <Button 
+                          type="submit" 
+                          className="w-full h-12 btn-primary"
+                          disabled={updateSecretsMutation.isPending}
+                        >
+                          {updateSecretsMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Enabling...
+                            </>
+                          ) : (
+                            "Enable TOTP 2FA"
+                          )}
+                        </Button>
+                      </form>
+
+                      {backupCodes.length > 0 && (
+                        <div className="space-y-2">
+                          <Alert className="border-yellow-200 bg-yellow-50/10">
+                            <Shield className="h-4 w-4 text-yellow-600" />
+                            <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                              <strong>Save these backup codes!</strong> You can use them to access your account if you lose your authenticator device.
+                            </AlertDescription>
+                          </Alert>
+                          
+                          <div className="bg-muted p-4 rounded-lg">
+                            <div className="grid grid-cols-2 gap-2 font-mono text-sm">
+                              {backupCodes.map((code, index) => (
+                                <div key={index} className="p-2 bg-background rounded text-center">
+                                  {code}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={copyBackupCodes}
+                            >
+                              <Copy className="w-4 h-4 mr-2" />
+                              Copy Codes
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={downloadBackupCodes}
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download
+                            </Button>
+                          </div>
+                        </div>
                       )}
-                    </Button>
-                  </form>
+                    </>
+                  )}
                 </div>
               </TabsContent>
 

@@ -1,107 +1,372 @@
 /**
  * Authentication API functions
- * Handles all authentication-related API calls
+ * Handles all authentication-related API calls with enhanced security
  */
 
 import { supabase } from '@/lib/supabase'
 import type { UserProfile, UserSession, User2FASecret } from '@/types/database'
+import { sanitizeInput, isValidEmail, checkPasswordStrength, isPasswordCompromised } from '@/lib/security-utils'
+import { loginRateLimiter, signupRateLimiter, passwordResetRateLimiter, emailVerificationRateLimiter, getRateLimitKey } from '@/lib/rate-limit'
+
+// Enhanced error handling
+class AuthError extends Error {
+  constructor(message: string, public code: string, public statusCode: number = 400) {
+    super(message)
+    this.name = 'AuthError'
+  }
+}
+
+// Input validation
+function validateEmail(email: string): void {
+  if (!email || typeof email !== 'string') {
+    throw new AuthError('Email is required', 'EMAIL_REQUIRED')
+  }
+  
+  const sanitizedEmail = sanitizeInput(email)
+  if (!isValidEmail(sanitizedEmail)) {
+    throw new AuthError('Invalid email format', 'INVALID_EMAIL')
+  }
+}
+
+function validatePassword(password: string): void {
+  if (!password || typeof password !== 'string') {
+    throw new AuthError('Password is required', 'PASSWORD_REQUIRED')
+  }
+  
+  if (password.length < 8) {
+    throw new AuthError('Password must be at least 8 characters long', 'PASSWORD_TOO_SHORT')
+  }
+  
+  if (isPasswordCompromised(password)) {
+    throw new AuthError('This password is commonly used and not secure', 'PASSWORD_COMPROMISED')
+  }
+  
+  const strength = checkPasswordStrength(password)
+  if (!strength.isStrong) {
+    throw new AuthError('Password is not strong enough', 'PASSWORD_WEAK')
+  }
+}
 
 // Auth API
 export const authAPI = {
   // Sign up with email and password
   async signUp(email: string, password: string, metadata?: Record<string, any>) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: metadata
+    try {
+      // Validate inputs
+      validateEmail(email)
+      validatePassword(password)
+      
+      // Check rate limiting
+      const rateLimitKey = getRateLimitKey('SIGNUP', email)
+      const rateLimit = signupRateLimiter.isAllowed(rateLimitKey)
+      
+      if (!rateLimit.allowed) {
+        throw new AuthError(
+          `Too many signup attempts. Please try again in ${Math.ceil(rateLimit.resetTime / 60000)} minutes.`,
+          'RATE_LIMIT_EXCEEDED',
+          429
+        )
       }
-    })
-    return { data, error }
+      
+      // Sanitize metadata
+      const sanitizedMetadata = metadata ? Object.fromEntries(
+        Object.entries(metadata).map(([key, value]) => [
+          sanitizeInput(key),
+          typeof value === 'string' ? sanitizeInput(value) : value
+        ])
+      ) : {}
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: sanitizeInput(email),
+        password,
+        options: {
+          data: sanitizedMetadata
+        }
+      })
+      
+      if (error) {
+        throw new AuthError(error.message, 'SIGNUP_FAILED', 400)
+      }
+      
+      return { data, error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('Signup failed', 'SIGNUP_ERROR', 500)
+    }
   },
 
   // Sign in with email and password
   async signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { data, error }
+    try {
+      // Validate inputs
+      validateEmail(email)
+      
+      if (!password || typeof password !== 'string') {
+        throw new AuthError('Password is required', 'PASSWORD_REQUIRED')
+      }
+      
+      // Check rate limiting
+      const rateLimitKey = getRateLimitKey('LOGIN', email)
+      const rateLimit = loginRateLimiter.isAllowed(rateLimitKey)
+      
+      if (!rateLimit.allowed) {
+        throw new AuthError(
+          `Too many login attempts. Please try again in ${Math.ceil(rateLimit.resetTime / 60000)} minutes.`,
+          'RATE_LIMIT_EXCEEDED',
+          429
+        )
+      }
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: sanitizeInput(email),
+        password,
+      })
+      
+      if (error) {
+        // Reset rate limit on successful login
+        if (data?.user) {
+          loginRateLimiter.reset(rateLimitKey)
+        }
+        throw new AuthError(error.message, 'LOGIN_FAILED', 401)
+      }
+      
+      return { data, error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('Login failed', 'LOGIN_ERROR', 500)
+    }
   },
 
   // Sign in with OAuth provider
   async signInWithOAuth(provider: 'google' | 'apple', redirectTo?: string) {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: redirectTo || `${window.location.origin}/dashboard`
+    try {
+      if (!provider || !['google', 'apple'].includes(provider)) {
+        throw new AuthError('Invalid OAuth provider', 'INVALID_PROVIDER')
       }
-    })
-    return { data, error }
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: redirectTo || `${window.location.origin}/dashboard`
+        }
+      })
+      
+      if (error) {
+        throw new AuthError(error.message, 'OAUTH_FAILED', 400)
+      }
+      
+      return { data, error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('OAuth sign-in failed', 'OAUTH_ERROR', 500)
+    }
   },
 
   // Sign out
   async signOut() {
-    const { error } = await supabase.auth.signOut()
-    return { error }
+    try {
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        throw new AuthError(error.message, 'SIGNOUT_FAILED', 400)
+      }
+      
+      return { error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('Sign out failed', 'SIGNOUT_ERROR', 500)
+    }
   },
 
   // Reset password
   async resetPassword(email: string, redirectTo?: string) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectTo || `${window.location.origin}/reset-password`
-    })
-    return { error }
+    try {
+      // Validate email
+      validateEmail(email)
+      
+      // Check rate limiting
+      const rateLimitKey = getRateLimitKey('PASSWORD_RESET', email)
+      const rateLimit = passwordResetRateLimiter.isAllowed(rateLimitKey)
+      
+      if (!rateLimit.allowed) {
+        throw new AuthError(
+          `Too many password reset attempts. Please try again in ${Math.ceil(rateLimit.resetTime / 60000)} minutes.`,
+          'RATE_LIMIT_EXCEEDED',
+          429
+        )
+      }
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(sanitizeInput(email), {
+        redirectTo: redirectTo || `${window.location.origin}/reset-password`
+      })
+      
+      if (error) {
+        throw new AuthError(error.message, 'PASSWORD_RESET_FAILED', 400)
+      }
+      
+      return { error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('Password reset failed', 'PASSWORD_RESET_ERROR', 500)
+    }
   },
 
   // Update password
   async updatePassword(password: string) {
-    const { data, error } = await supabase.auth.updateUser({
-      password
-    })
-    return { data, error }
+    try {
+      // Validate password
+      validatePassword(password)
+      
+      const { data, error } = await supabase.auth.updateUser({
+        password
+      })
+      
+      if (error) {
+        throw new AuthError(error.message, 'PASSWORD_UPDATE_FAILED', 400)
+      }
+      
+      return { data, error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('Password update failed', 'PASSWORD_UPDATE_ERROR', 500)
+    }
   },
 
   // Verify password reset token
   async verifyPasswordResetToken(token: string) {
-    const { data, error } = await supabase.auth.verifyOtp({
-      token_hash: token,
-      type: 'recovery'
-    })
-    return { data, error }
+    try {
+      if (!token || typeof token !== 'string') {
+        throw new AuthError('Token is required', 'TOKEN_REQUIRED')
+      }
+      
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: sanitizeInput(token),
+        type: 'recovery'
+      })
+      
+      if (error) {
+        throw new AuthError(error.message, 'TOKEN_VERIFICATION_FAILED', 400)
+      }
+      
+      return { data, error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('Token verification failed', 'TOKEN_VERIFICATION_ERROR', 500)
+    }
   },
 
   // Get current session
   async getSession() {
-    const { data, error } = await supabase.auth.getSession()
-    return { data, error }
+    try {
+      const { data, error } = await supabase.auth.getSession()
+      
+      if (error) {
+        throw new AuthError(error.message, 'SESSION_GET_FAILED', 400)
+      }
+      
+      return { data, error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('Session retrieval failed', 'SESSION_ERROR', 500)
+    }
   },
 
   // Refresh session
   async refreshSession() {
-    const { data, error } = await supabase.auth.refreshSession()
-    return { data, error }
+    try {
+      const { data, error } = await supabase.auth.refreshSession()
+      
+      if (error) {
+        throw new AuthError(error.message, 'SESSION_REFRESH_FAILED', 400)
+      }
+      
+      return { data, error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('Session refresh failed', 'SESSION_REFRESH_ERROR', 500)
+    }
   },
 
   // Resend email verification
   async resendEmailVerification(email: string, redirectTo?: string) {
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email,
-      options: {
-        emailRedirectTo: redirectTo || `${window.location.origin}/verify-email`
+    try {
+      // Validate email
+      validateEmail(email)
+      
+      // Check rate limiting
+      const rateLimitKey = getRateLimitKey('EMAIL_VERIFICATION', email)
+      const rateLimit = emailVerificationRateLimiter.isAllowed(rateLimitKey)
+      
+      if (!rateLimit.allowed) {
+        throw new AuthError(
+          `Too many verification email attempts. Please try again in ${Math.ceil(rateLimit.resetTime / 60000)} minutes.`,
+          'RATE_LIMIT_EXCEEDED',
+          429
+        )
       }
-    })
-    return { error }
+      
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: sanitizeInput(email),
+        options: {
+          emailRedirectTo: redirectTo || `${window.location.origin}/verify-email`
+        }
+      })
+      
+      if (error) {
+        throw new AuthError(error.message, 'EMAIL_VERIFICATION_RESEND_FAILED', 400)
+      }
+      
+      return { error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('Email verification resend failed', 'EMAIL_VERIFICATION_ERROR', 500)
+    }
   },
 
   // Verify email with token
   async verifyEmail(token: string, type: 'signup' | 'email_change' = 'signup') {
-    const { data, error } = await supabase.auth.verifyOtp({
-      token_hash: token,
-      type
-    })
-    return { data, error }
+    try {
+      if (!token || typeof token !== 'string') {
+        throw new AuthError('Token is required', 'TOKEN_REQUIRED')
+      }
+      
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: sanitizeInput(token),
+        type
+      })
+      
+      if (error) {
+        throw new AuthError(error.message, 'EMAIL_VERIFICATION_FAILED', 400)
+      }
+      
+      return { data, error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('Email verification failed', 'EMAIL_VERIFICATION_ERROR', 500)
+    }
   }
 }
 
