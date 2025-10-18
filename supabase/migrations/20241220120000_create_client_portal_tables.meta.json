@@ -1,0 +1,12 @@
+{
+  "migration_name": "20241220120000_create_client_portal_tables",
+  "created_at": "2024-12-20T12:00:00Z",
+  "description": "Create client portal tables for project management and client access",
+  "tables_created": ["projects", "client_portals", "portal_documents", "portal_comments", "portal_settings"],
+  "tables_modified": [],
+  "tables_deleted": [],
+  "breaking_changes": false,
+  "rollback_sql": "DROP TABLE IF EXISTS portal_settings CASCADE; DROP TABLE IF EXISTS portal_comments CASCADE; DROP TABLE IF EXISTS portal_documents CASCADE; DROP TABLE IF EXISTS client_portals CASCADE; DROP TABLE IF EXISTS projects CASCADE;",
+  "estimated_rows": 0,
+  "requires_downtime": false
+}
