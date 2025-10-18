@@ -4,8 +4,15 @@
  */
 
 import { supabase } from '@/lib/supabase'
-import { createChatCompletion, trackTokenUsage, type ChatMessage } from '@/lib/openai'
-import type { Agent, AgentExecution, AgentWorkflow, WorkflowStep } from '@/types/database'
+import { createChatCompletion, createEmbedding, trackTokenUsage, type ChatMessage } from '@/lib/openai'
+import type { 
+  Agent, 
+  AgentExecution, 
+  AgentWorkflow, 
+  WorkflowStep, 
+  AgentMemory,
+  AgentMemoryInsert 
+} from '@/types/database'
 
 export interface AgentExecutionContext {
   userId: string
@@ -15,6 +22,8 @@ export interface AgentExecutionContext {
   sessionId?: string
   inputData: Record<string, any>
   metadata?: Record<string, any>
+  useMemory?: boolean
+  memoryLimit?: number
 }
 
 export interface AgentExecutionResult {
@@ -28,11 +37,15 @@ export interface AgentExecutionResult {
     total_tokens: number
   }
   error?: string
+  memoryUsed?: AgentMemory[]
+  executionTime?: number
 }
 
 export class AgentOrchestrator {
   private static instance: AgentOrchestrator
   private executionQueue: Map<string, Promise<AgentExecutionResult>> = new Map()
+  private memoryCache: Map<string, AgentMemory[]> = new Map()
+  private rateLimiters: Map<string, { count: number; resetTime: number }> = new Map()
 
   static getInstance(): AgentOrchestrator {
     if (!AgentOrchestrator.instance) {
@@ -272,9 +285,32 @@ export class AgentOrchestrator {
     context: AgentExecutionContext,
     executionId: string
   ): Promise<AgentExecutionResult> {
-    // Prepare messages for OpenAI
+    const startTime = Date.now()
+    
+    // Check rate limits
+    await this.checkRateLimit(context.userId, context.agentId)
+
+    // Get relevant memory if enabled
+    let relevantMemory: AgentMemory[] = []
+    if (context.useMemory !== false) {
+      relevantMemory = await this.getRelevantMemory(
+        context.userId,
+        context.agentId,
+        context.sessionId || 'default',
+        context.inputData,
+        context.memoryLimit || 10
+      )
+    }
+
+    // Prepare messages for OpenAI with memory context
     const messages: ChatMessage[] = [
       { role: 'system', content: agent.system_prompt },
+      ...(relevantMemory.length > 0 ? [
+        { 
+          role: 'system', 
+          content: `Previous context:\n${relevantMemory.map(m => m.content).join('\n\n')}` 
+        }
+      ] : []),
       { role: 'user', content: JSON.stringify(context.inputData) }
     ]
 
@@ -310,6 +346,21 @@ export class AgentOrchestrator {
       }
     }
 
+    // Store in memory if enabled
+    if (context.useMemory !== false) {
+      await this.storeMemory({
+        user_id: context.userId,
+        agent_id: context.agentId,
+        session_id: context.sessionId || 'default',
+        content: completion.content,
+        metadata: {
+          execution_id: executionId,
+          confidence,
+          input_data: context.inputData
+        }
+      })
+    }
+
     // Check if approval is required
     const requiresApproval = agent.requires_approval && confidence < agent.approval_threshold
 
@@ -318,7 +369,9 @@ export class AgentOrchestrator {
       status: requiresApproval ? 'awaiting_approval' : 'completed',
       output,
       confidence,
-      tokenUsage: completion.usage
+      tokenUsage: completion.usage,
+      memoryUsed: relevantMemory,
+      executionTime: Date.now() - startTime
     }
   }
 
@@ -401,5 +454,215 @@ export class AgentOrchestrator {
       event_category: 'approval',
       event_data: { approved, notes }
     })
+  }
+
+  /**
+   * Store memory for an agent
+   */
+  private async storeMemory(memory: AgentMemoryInsert): Promise<void> {
+    try {
+      // Generate embedding for the content
+      const embedding = await createEmbedding(memory.content)
+      
+      const { error } = await supabase
+        .from('agent_memory')
+        .insert({
+          ...memory,
+          embedding: embedding.embedding
+        })
+
+      if (error) {
+        console.error('Failed to store memory:', error)
+      } else {
+        // Track embedding token usage
+        await trackTokenUsage(
+          memory.user_id,
+          memory.agent_id,
+          null,
+          embedding.model,
+          embedding.usage,
+          'embedding'
+        )
+      }
+    } catch (error) {
+      console.error('Memory storage error:', error)
+    }
+  }
+
+  /**
+   * Get relevant memory for an agent
+   */
+  private async getRelevantMemory(
+    userId: string,
+    agentId: string,
+    sessionId: string,
+    inputData: Record<string, any>,
+    limit: number = 10
+  ): Promise<AgentMemory[]> {
+    try {
+      // Check cache first
+      const cacheKey = `${userId}-${agentId}-${sessionId}`
+      if (this.memoryCache.has(cacheKey)) {
+        return this.memoryCache.get(cacheKey)!.slice(0, limit)
+      }
+
+      // Get recent memories for this session
+      const { data, error } = await supabase
+        .from('agent_memory')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('agent_id', agentId)
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+      if (error) {
+        console.error('Failed to get memory:', error)
+        return []
+      }
+
+      const memories = data || []
+      
+      // Cache the results
+      this.memoryCache.set(cacheKey, memories)
+      
+      // Clear cache after 5 minutes
+      setTimeout(() => {
+        this.memoryCache.delete(cacheKey)
+      }, 5 * 60 * 1000)
+
+      return memories
+    } catch (error) {
+      console.error('Memory retrieval error:', error)
+      return []
+    }
+  }
+
+  /**
+   * Check rate limits for agent execution
+   */
+  private async checkRateLimit(userId: string, agentId: string): Promise<void> {
+    const key = `${userId}-${agentId}`
+    const now = Date.now()
+    const windowMs = 60 * 1000 // 1 minute window
+    const maxRequests = 10 // Max 10 requests per minute per agent
+
+    const current = this.rateLimiters.get(key)
+    
+    if (!current || now > current.resetTime) {
+      // Reset or initialize
+      this.rateLimiters.set(key, { count: 1, resetTime: now + windowMs })
+      return
+    }
+
+    if (current.count >= maxRequests) {
+      throw new Error('Rate limit exceeded. Please try again later.')
+    }
+
+    current.count++
+  }
+
+  /**
+   * Clear memory for a session
+   */
+  async clearSessionMemory(userId: string, agentId: string, sessionId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('agent_memory')
+        .delete()
+        .eq('user_id', userId)
+        .eq('agent_id', agentId)
+        .eq('session_id', sessionId)
+
+      if (error) {
+        throw new Error(`Failed to clear memory: ${error.message}`)
+      }
+
+      // Clear from cache
+      const cacheKey = `${userId}-${agentId}-${sessionId}`
+      this.memoryCache.delete(cacheKey)
+    } catch (error) {
+      console.error('Memory clear error:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get agent performance metrics
+   */
+  async getAgentMetrics(
+    userId: string,
+    agentId: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<{
+    totalExecutions: number
+    successRate: number
+    averageConfidence: number
+    averageExecutionTime: number
+    totalTokens: number
+    totalCost: number
+  }> {
+    try {
+      let query = supabase
+        .from('agent_executions')
+        .select('status, confidence_score, duration_ms, prompt_tokens, completion_tokens, total_tokens')
+        .eq('user_id', userId)
+        .eq('agent_id', agentId)
+
+      if (startDate) {
+        query = query.gte('created_at', startDate)
+      }
+      if (endDate) {
+        query = query.lte('created_at', endDate)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        throw error
+      }
+
+      const executions = data || []
+      const totalExecutions = executions.length
+      const successfulExecutions = executions.filter(e => e.status === 'completed').length
+      const successRate = totalExecutions > 0 ? successfulExecutions / totalExecutions : 0
+      
+      const averageConfidence = executions.length > 0 
+        ? executions.reduce((sum, e) => sum + (e.confidence_score || 0), 0) / executions.length 
+        : 0
+
+      const averageExecutionTime = executions.length > 0
+        ? executions.reduce((sum, e) => sum + (e.duration_ms || 0), 0) / executions.length
+        : 0
+
+      const totalTokens = executions.reduce((sum, e) => sum + (e.total_tokens || 0), 0)
+      
+      // Calculate cost (simplified)
+      const totalCost = executions.reduce((sum, e) => {
+        const promptCost = (e.prompt_tokens || 0) * 0.001 / 1000
+        const completionCost = (e.completion_tokens || 0) * 0.002 / 1000
+        return sum + promptCost + completionCost
+      }, 0)
+
+      return {
+        totalExecutions,
+        successRate,
+        averageConfidence,
+        averageExecutionTime,
+        totalTokens,
+        totalCost
+      }
+    } catch (error) {
+      console.error('Failed to get agent metrics:', error)
+      return {
+        totalExecutions: 0,
+        successRate: 0,
+        averageConfidence: 0,
+        averageExecutionTime: 0,
+        totalTokens: 0,
+        totalCost: 0
+      }
+    }
   }
 }
