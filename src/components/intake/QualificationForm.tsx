@@ -315,7 +315,7 @@ export default function QualificationForm({ data, onChange, sessionId }: Qualifi
             {sections.map((section) => {
               const Icon = section.icon
               const isActive = activeSection === section.id
-              const isCompleted = checkSectionCompletion(section.id)
+              const isCompleted = checkSectionCompletion(section.id, formData)
               
               return (
                 <button
@@ -936,8 +936,19 @@ export default function QualificationForm({ data, onChange, sessionId }: Qualifi
 }
 
 // Helper function to check if a section is completed
-function checkSectionCompletion(sectionId: string): boolean {
-  // This would be implemented based on the actual form data
-  // For now, return false as a placeholder
-  return false
+function checkSectionCompletion(sectionId: string, formData: QualificationData): boolean {
+  switch (sectionId) {
+    case 'budget':
+      return formData.budget.min > 0 && formData.budget.max > 0
+    case 'timeline':
+      return formData.timeline.startDate !== '' && formData.timeline.endDate !== ''
+    case 'scope':
+      return formData.scope.description !== '' && formData.scope.features.length > 0
+    case 'stakeholders':
+      return formData.stakeholders.primary.name !== '' && formData.stakeholders.primary.email !== ''
+    case 'company':
+      return formData.company.name !== '' && formData.company.industry !== ''
+    default:
+      return false
+  }
 }
