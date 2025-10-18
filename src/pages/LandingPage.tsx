@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { 
   Bot, 
   Zap, 
@@ -9,30 +10,101 @@ import {
   CheckCircle,
   Star,
   Users,
-  BarChart3
+  BarChart3,
+  Play,
+  ChevronRight,
+  Sparkles,
+  Target,
+  Clock,
+  Globe,
+  FileText,
+  Settings,
+  MessageSquare,
+  Code,
+  GitBranch,
+  Cloud,
+  Mail,
+  Phone,
+  Twitter,
+  Linkedin,
+  Github
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "motion/react";
 
 const features = [
   {
     icon: Bot,
-    title: "AI Multi-Agent Engine",
-    description: "Specialized agents for intake, project management, communications, and more."
+    title: "AI Intake Agent",
+    description: "Qualifies leads, captures requirements, and generates proposals automatically with e-signature integration.",
+    gradient: "from-blue-500/20 to-cyan-500/20",
+    borderColor: "border-blue-500/30"
   },
   {
-    icon: Zap,
-    title: "Automated Workflows",
-    description: "Streamline operations with intelligent automation and human-in-the-loop controls."
+    icon: GitBranch,
+    title: "Project Spin-Up Agent",
+    description: "Provisions repos, environments, task templates, and branded client portals in minutes.",
+    gradient: "from-purple-500/20 to-pink-500/20",
+    borderColor: "border-purple-500/30"
+  },
+  {
+    icon: Target,
+    title: "PM Agent",
+    description: "Plans sprints, assigns tasks, writes acceptance criteria, and chases blockers automatically.",
+    gradient: "from-green-500/20 to-emerald-500/20",
+    borderColor: "border-green-500/30"
+  },
+  {
+    icon: MessageSquare,
+    title: "Comms Agent",
+    description: "Summarizes meetings, posts updates, and converts feedback into actionable tickets.",
+    gradient: "from-orange-500/20 to-red-500/20",
+    borderColor: "border-orange-500/30"
+  },
+  {
+    icon: Code,
+    title: "Research/Copilot Agent",
+    description: "Drafts specs, user stories, test plans, and PR drafts aligned with your tech stack.",
+    gradient: "from-indigo-500/20 to-blue-500/20",
+    borderColor: "border-indigo-500/30"
   },
   {
     icon: Rocket,
-    title: "Project Provisioning",
-    description: "Automatically provision repos, environments, and client portals."
+    title: "Launch Agent",
+    description: "Runs QA/security checklists, coordinates deploys, and manages release communications.",
+    gradient: "from-yellow-500/20 to-orange-500/20",
+    borderColor: "border-yellow-500/30"
+  }
+];
+
+const workflowSteps = [
+  {
+    step: "01",
+    title: "Intake & Qualification",
+    description: "AI agent qualifies leads through intelligent conversation, capturing requirements and budget details.",
+    icon: Bot,
+    color: "text-blue-400"
   },
   {
-    icon: Shield,
-    title: "Enterprise Security",
-    description: "Built-in security, compliance, and audit logging for enterprise needs."
+    step: "02", 
+    title: "Proposal & E-Sign",
+    description: "Generate professional proposals and SoWs with automated e-signature workflows.",
+    icon: FileText,
+    color: "text-purple-400"
+  },
+  {
+    step: "03",
+    title: "Project Provisioning",
+    description: "Automatically provision repos, environments, and branded client portals.",
+    icon: Cloud,
+    color: "text-green-400"
+  },
+  {
+    step: "04",
+    title: "AI-Powered Delivery",
+    description: "Specialized agents manage the entire delivery process with human oversight.",
+    icon: Settings,
+    color: "text-orange-400"
   }
 ];
 
@@ -40,213 +112,619 @@ const testimonials = [
   {
     name: "Sarah Johnson",
     role: "CEO, TechStart Agency",
-    content: "OpsCrew has revolutionized how we handle client projects. The AI agents save us 40+ hours per week.",
-    rating: 5
+    company: "TechStart Agency",
+    content: "OpsCrew has revolutionized how we handle client projects. The AI agents save us 40+ hours per week and our client satisfaction has increased by 60%.",
+    rating: 5,
+    avatar: "SJ",
+    gradient: "from-blue-500 to-purple-500"
   },
   {
     name: "Mike Chen",
     role: "CTO, Digital Solutions",
-    content: "The automated provisioning and project management features are game-changers for our team.",
-    rating: 5
+    company: "Digital Solutions",
+    content: "The automated provisioning and project management features are game-changers. We've reduced project setup time from days to minutes.",
+    rating: 5,
+    avatar: "MC",
+    gradient: "from-green-500 to-blue-500"
+  },
+  {
+    name: "Emily Rodriguez",
+    role: "Founder, Creative Studio",
+    company: "Creative Studio",
+    content: "The AI agents handle all our operational overhead so we can focus on creative work. It's like having a full operations team.",
+    rating: 5,
+    avatar: "ER",
+    gradient: "from-pink-500 to-orange-500"
+  }
+];
+
+const pricingPlans = [
+  {
+    name: "Starter",
+    price: "$99",
+    period: "/month",
+    description: "Perfect for small agencies getting started",
+    features: [
+      "Up to 5 active projects",
+      "AI Intake Agent",
+      "Basic project provisioning",
+      "Email support",
+      "Standard templates"
+    ],
+    cta: "Start Free Trial",
+    popular: false
+  },
+  {
+    name: "Professional",
+    price: "$299",
+    period: "/month", 
+    description: "Most popular for growing agencies",
+    features: [
+      "Up to 25 active projects",
+      "All AI agents included",
+      "Advanced provisioning",
+      "Priority support",
+      "Custom templates",
+      "Client portal branding",
+      "Advanced analytics"
+    ],
+    cta: "Start Free Trial",
+    popular: true
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    period: "",
+    description: "For large agencies with custom needs",
+    features: [
+      "Unlimited projects",
+      "All features included",
+      "Custom integrations",
+      "Dedicated support",
+      "SLA guarantees",
+      "On-premise deployment",
+      "Custom agent training"
+    ],
+    cta: "Contact Sales",
+    popular: false
   }
 ];
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 animate-fade-in-up">
-              AI-Powered Operations for
-              <span className="text-primary block">Modern Agencies</span>
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-in-up">
-              Automate intake, project spin-up, delivery orchestration, and client management 
-              with specialized AI agents that work 24/7.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up">
-              <Button asChild size="lg" className="btn-primary text-lg px-8 py-6">
-                <Link to="/signup">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-                <Link to="/login">
-                  Book Demo
-                </Link>
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-background overflow-hidden">
+      {/* Hero Section with Animated Gradients */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/20 animate-pulse"></div>
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-bounce" style={{ animationDuration: '6s' }}></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-bounce" style={{ animationDuration: '8s', animationDelay: '2s' }}></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/5 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s' }}></div>
         </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 z-10">
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8"
+            >
+              <Sparkles className="w-4 h-4" />
+              AI-Powered Operations Platform
+            </motion.div>
+
+            {/* Main Headline */}
+            <motion.h1 
+              className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground mb-8 leading-tight"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+            >
+              <span className="block">AI-Powered Operations</span>
+              <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse">
+                for Modern Agencies
+              </span>
+            </motion.h1>
+
+            {/* Subheadline */}
+            <motion.p 
+              className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+            >
+              Automate intake, project spin-up, delivery orchestration, and client management 
+              with specialized AI agents that work 24/7. Focus on building while we handle the operations.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div 
+              className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.7 }}
+            >
+              <Button asChild size="lg" className="btn-primary text-lg px-8 py-6 h-14 group">
+                <Link to="/signup" className="flex items-center gap-2">
+                  Start Free Trial
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-14 group border-primary/30 hover:border-primary/50">
+                <Link to="/login" className="flex items-center gap-2">
+                  <Play className="w-5 h-5" />
+                  Watch Demo
+                </Link>
+              </Button>
+            </motion.div>
+
+            {/* Stats */}
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
+            >
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">40+</div>
+                <div className="text-muted-foreground">Hours Saved Per Week</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">60%</div>
+                <div className="text-muted-foreground">Faster Project Setup</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">24/7</div>
+                <div className="text-muted-foreground">AI Agent Availability</div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 1.5 }}
+        >
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-6 h-10 border-2 border-primary/30 rounded-full flex justify-center"
+          >
+            <motion.div
+              animate={{ y: [0, 12, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-1 h-3 bg-primary rounded-full mt-2"
+            />
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-card/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Everything You Need to Scale
+      <section className="py-24 bg-gradient-to-b from-background to-card/30 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div 
+            className="text-center mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+              AI Agents
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+              Specialized AI Agents for
+              <span className="block bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Every Operation
+              </span>
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Our AI agents handle the heavy lifting so you can focus on what matters most.
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Our multi-agent system handles every aspect of your operations, from initial client intake 
+              to project delivery and ongoing support.
             </p>
-          </div>
+          </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="card-hover animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
-                <CardHeader>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                    <feature.icon className="w-6 h-6 text-primary" />
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="group"
+              >
+                <Card className={`relative overflow-hidden border-2 ${feature.borderColor} hover:border-primary/50 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-primary/10`}>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                  <CardHeader className="relative z-10">
+                    <div className={`w-14 h-14 bg-gradient-to-br ${feature.gradient} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                      <feature.icon className="w-7 h-7 text-foreground" />
+                    </div>
+                    <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors duration-300">
+                      {feature.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="relative z-10">
+                    <CardDescription className="text-base leading-relaxed">
+                      {feature.description}
+                    </CardDescription>
+                  </CardContent>
+                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <ChevronRight className="w-5 h-5 text-primary" />
                   </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base">
-                    {feature.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-24">
+      <section className="py-24 bg-gradient-to-b from-card/30 to-background relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <motion.div 
+            className="text-center mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="mb-4 bg-accent/10 text-accent border-accent/20">
+              Workflow
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               How It Works
             </h2>
-            <p className="text-xl text-muted-foreground">
-              Get started in minutes with our simple 4-step process
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Get started in minutes with our streamlined 4-step process that transforms 
+              your operations from day one.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {[
-              { step: "1", title: "Intake", description: "AI agent qualifies leads and captures requirements" },
-              { step: "2", title: "Proposal", description: "Generate and send proposals with e-signature" },
-              { step: "3", title: "Provision", description: "Automatically set up repos and environments" },
-              { step: "4", title: "Deliver", description: "AI agents manage the entire delivery process" }
-            ].map((item, index) => (
-              <div key={index} className="text-center animate-fade-in-up" style={{ animationDelay: `${index * 150}ms` }}>
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 text-primary-foreground font-bold text-xl">
-                  {item.step}
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                <p className="text-muted-foreground">{item.description}</p>
-              </div>
-            ))}
+          <div className="relative">
+            {/* Connection Line */}
+            <div className="hidden lg:block absolute top-24 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20"></div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4">
+              {workflowSteps.map((step, index) => (
+                <motion.div 
+                  key={index}
+                  className="relative text-center group"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.2 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -8 }}
+                >
+                  {/* Step Number Circle */}
+                  <div className="relative mb-8">
+                    <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 border-2 border-primary/30 group-hover:border-primary/50">
+                      <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-xl group-hover:scale-105 transition-transform duration-300">
+                        {step.step}
+                      </div>
+                    </div>
+                    {/* Icon */}
+                    <div className="absolute -top-2 -right-2 w-12 h-12 bg-card border-2 border-border rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <step.icon className={`w-6 h-6 ${step.color}`} />
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold mb-4 group-hover:text-primary transition-colors duration-300">
+                    {step.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {step.description}
+                  </p>
+                  
+                  {/* Arrow for mobile */}
+                  {index < workflowSteps.length - 1 && (
+                    <div className="lg:hidden flex justify-center mt-8">
+                      <ChevronRight className="w-6 h-6 text-primary/50" />
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 bg-card/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+      <section className="py-24 bg-gradient-to-b from-background to-card/30 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div 
+            className="text-center mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="mb-4 bg-accent/10 text-accent border-accent/20">
+              Testimonials
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               Trusted by Leading Agencies
             </h2>
-            <p className="text-xl text-muted-foreground">
-              See what our customers are saying
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              See how OpsCrew is transforming operations for agencies worldwide
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="animate-fade-in-up" style={{ animationDelay: `${index * 200}ms` }}>
-                <CardContent className="pt-6">
-                  <div className="flex items-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                    ))}
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="group"
+              >
+                <Card className="relative overflow-hidden border-2 border-border/30 hover:border-primary/30 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-primary/5">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                  <CardContent className="pt-8 relative z-10">
+                    {/* Stars */}
+                    <div className="flex items-center mb-6">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                      ))}
+                    </div>
+                    
+                    {/* Quote */}
+                    <blockquote className="text-lg leading-relaxed mb-6 text-foreground/90">
+                      "{testimonial.content}"
+                    </blockquote>
+                    
+                    {/* Author */}
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 bg-gradient-to-br ${testimonial.gradient} rounded-full flex items-center justify-center text-white font-bold text-lg`}>
+                        {testimonial.avatar}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground">{testimonial.name}</p>
+                        <p className="text-muted-foreground text-sm">{testimonial.role}</p>
+                        <p className="text-primary text-sm font-medium">{testimonial.company}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-24 bg-gradient-to-b from-card/30 to-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            className="text-center mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+              Pricing
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Choose the plan that fits your agency's needs. All plans include our core AI agents.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {pricingPlans.map((plan, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className={`relative group ${plan.popular ? 'md:-mt-8' : ''}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <Badge className="bg-primary text-primary-foreground px-4 py-1">
+                      Most Popular
+                    </Badge>
                   </div>
-                  <p className="text-lg mb-4">"{testimonial.content}"</p>
-                  <div>
-                    <p className="font-semibold">{testimonial.name}</p>
-                    <p className="text-muted-foreground">{testimonial.role}</p>
-                  </div>
-                </CardContent>
-              </Card>
+                )}
+                <Card className={`relative overflow-hidden border-2 transition-all duration-300 ${
+                  plan.popular 
+                    ? 'border-primary/50 shadow-2xl shadow-primary/10' 
+                    : 'border-border/30 hover:border-primary/30'
+                } group-hover:shadow-2xl group-hover:shadow-primary/5`}>
+                  <CardHeader className="text-center pb-4">
+                    <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                    <div className="mt-4">
+                      <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                      <span className="text-muted-foreground">{plan.period}</span>
+                    </div>
+                    <p className="text-muted-foreground mt-2">{plan.description}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <ul className="space-y-4">
+                      {plan.features.map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button 
+                      asChild 
+                      className={`w-full h-12 text-lg ${
+                        plan.popular 
+                          ? 'btn-primary' 
+                          : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                      }`}
+                    >
+                      <Link to={plan.cta === "Contact Sales" ? "/contact" : "/signup"}>
+                        {plan.cta}
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-24">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-            Ready to Transform Your Operations?
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8">
-            Join hundreds of agencies already using OpsCrew to scale their operations.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="btn-primary text-lg px-8 py-6">
-              <Link to="/signup">
-                Start Your Free Trial
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-              <Link to="/login">
-                Schedule Demo
-              </Link>
-            </Button>
-          </div>
+      <section className="py-24 bg-gradient-to-b from-background to-card/50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5"></div>
+        <div className="max-w-6xl mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+              Ready to Transform Your Operations?
+            </h2>
+            <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
+              Join hundreds of agencies already using OpsCrew to scale their operations. 
+              Start your free trial today and see the difference AI can make.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
+              <Button asChild size="lg" className="btn-primary text-lg px-8 py-6 h-14 group">
+                <Link to="/signup" className="flex items-center gap-2">
+                  Start Your Free Trial
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-14 group border-primary/30 hover:border-primary/50">
+                <Link to="/login" className="flex items-center gap-2">
+                  <Play className="w-5 h-5" />
+                  Schedule Demo
+                </Link>
+              </Button>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary mb-2">500+</div>
+                <div className="text-sm text-muted-foreground">Agencies</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary mb-2">10K+</div>
+                <div className="text-sm text-muted-foreground">Projects Delivered</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary mb-2">99.9%</div>
+                <div className="text-sm text-muted-foreground">Uptime</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary mb-2">24/7</div>
+                <div className="text-sm text-muted-foreground">Support</div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-primary-foreground" />
+      <footer className="bg-card border-t border-border py-16 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/5 to-transparent"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+            {/* Brand */}
+            <div className="lg:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center">
+                  <Bot className="w-6 h-6 text-primary-foreground" />
                 </div>
-                <span className="font-bold text-lg">OpsCrew</span>
+                <span className="font-bold text-2xl">OpsCrew</span>
               </div>
-              <p className="text-muted-foreground">
-                AI-powered operations platform for modern agencies.
+              <p className="text-muted-foreground mb-6 max-w-md leading-relaxed">
+                AI-powered operations platform that automates intake, project management, 
+                and delivery for modern agencies.
               </p>
+              <div className="flex gap-4">
+                <Button variant="outline" size="icon" className="border-border/30 hover:border-primary/50">
+                  <Twitter className="w-5 h-5" />
+                </Button>
+                <Button variant="outline" size="icon" className="border-border/30 hover:border-primary/50">
+                  <Linkedin className="w-5 h-5" />
+                </Button>
+                <Button variant="outline" size="icon" className="border-border/30 hover:border-primary/50">
+                  <Github className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
+            
+            {/* Product */}
             <div>
-              <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><Link to="/features">Features</Link></li>
-                <li><Link to="/pricing">Pricing</Link></li>
-                <li><Link to="/integrations">Integrations</Link></li>
+              <h3 className="font-semibold text-foreground mb-6">Product</h3>
+              <ul className="space-y-4 text-muted-foreground">
+                <li><Link to="/features" className="hover:text-primary transition-colors">Features</Link></li>
+                <li><Link to="/pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
+                <li><Link to="/integrations" className="hover:text-primary transition-colors">Integrations</Link></li>
+                <li><Link to="/api" className="hover:text-primary transition-colors">API</Link></li>
+                <li><Link to="/changelog" className="hover:text-primary transition-colors">Changelog</Link></li>
               </ul>
             </div>
+            
+            {/* Company */}
             <div>
-              <h3 className="font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><Link to="/about">About</Link></li>
-                <li><Link to="/careers">Careers</Link></li>
-                <li><Link to="/contact">Contact</Link></li>
+              <h3 className="font-semibold text-foreground mb-6">Company</h3>
+              <ul className="space-y-4 text-muted-foreground">
+                <li><Link to="/about" className="hover:text-primary transition-colors">About</Link></li>
+                <li><Link to="/careers" className="hover:text-primary transition-colors">Careers</Link></li>
+                <li><Link to="/blog" className="hover:text-primary transition-colors">Blog</Link></li>
+                <li><Link to="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
+                <li><Link to="/press" className="hover:text-primary transition-colors">Press</Link></li>
               </ul>
             </div>
+            
+            {/* Support */}
             <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><Link to="/help">Help Center</Link></li>
-                <li><Link to="/docs">Documentation</Link></li>
-                <li><Link to="/status">Status</Link></li>
+              <h3 className="font-semibold text-foreground mb-6">Support</h3>
+              <ul className="space-y-4 text-muted-foreground">
+                <li><Link to="/help" className="hover:text-primary transition-colors">Help Center</Link></li>
+                <li><Link to="/docs" className="hover:text-primary transition-colors">Documentation</Link></li>
+                <li><Link to="/status" className="hover:text-primary transition-colors">Status</Link></li>
+                <li><Link to="/community" className="hover:text-primary transition-colors">Community</Link></li>
+                <li><Link to="/security" className="hover:text-primary transition-colors">Security</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
-            <p>&copy; 2024 OpsCrew. All rights reserved.</p>
+          
+          <div className="border-t border-border pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-muted-foreground text-sm">
+                &copy; 2024 OpsCrew. All rights reserved.
+              </p>
+              <div className="flex gap-6 text-sm text-muted-foreground">
+                <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
+                <Link to="/cookies" className="hover:text-primary transition-colors">Cookie Policy</Link>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

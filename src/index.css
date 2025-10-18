@@ -208,6 +208,41 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--primary));
   }
+
+  /* Grid pattern background */
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(rgba(83, 183, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(83, 183, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Enhanced button hover effects */
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(83, 183, 255, 0.3);
+  }
+
+  /* Card hover effects */
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Gradient text animation */
+  .gradient-text-animated {
+    background: linear-gradient(-45deg, #53B7FF, #83B7FF, #53B7FF, #83B7FF);
+    background-size: 400% 400%;
+    animation: gradientShift 3s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Pulse animation for important elements */
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
 }
 
 /* Smooth Scrolling */
@@ -265,6 +300,27 @@
   }
   50% {
     box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(83, 183, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(83, 183, 255, 0.6);
   }
 }
 
