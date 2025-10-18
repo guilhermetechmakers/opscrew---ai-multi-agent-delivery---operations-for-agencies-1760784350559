@@ -31,7 +31,8 @@ import {
   XCircle,
   Shield,
   GitBranch,
-  Globe
+  Globe,
+  Rocket
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
@@ -506,6 +507,25 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      {/* System Status Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-6"
+      >
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
+          <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-emerald-500">All systems operational</p>
+            <p className="text-xs text-muted-foreground">Last updated 2 minutes ago</p>
+          </div>
+          <Button variant="ghost" size="sm" className="text-emerald-500 hover:text-emerald-600">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
+      </motion.div>
+
       {/* Enhanced Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
         <MetricCard
@@ -802,11 +822,124 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Client Portal Access Links */}
+      {/* Enhanced Performance Metrics */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
+        className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8"
+      >
+        {/* Performance Metrics */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-500/10 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-purple-500" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Performance Metrics</CardTitle>
+                <CardDescription className="text-sm">
+                  System performance and efficiency metrics
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Agent Success Rate</span>
+                <span className="text-sm font-semibold text-emerald-500">94.2%</span>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-2 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" 
+                  initial={{ width: 0 }}
+                  animate={{ width: "94.2%" }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Average Response Time</span>
+                <span className="text-sm font-semibold text-blue-500">1.2s</span>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-2 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" 
+                  initial={{ width: 0 }}
+                  animate={{ width: "85%" }}
+                  transition={{ duration: 1, delay: 0.7 }}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">System Uptime</span>
+                <span className="text-sm font-semibold text-green-500">99.9%</span>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-2 bg-gradient-to-r from-green-500 to-green-400 rounded-full" 
+                  initial={{ width: 0 }}
+                  animate={{ width: "99.9%" }}
+                  transition={{ duration: 1, delay: 0.9 }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity Timeline */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/10 flex items-center justify-center">
+                <Activity className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Recent Activity</CardTitle>
+                <CardDescription className="text-sm">
+                  Latest system events and updates
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { action: "Project 'TechStart' deployed successfully", time: "2 min ago", type: "success" },
+                { action: "New proposal generated for 'E-commerce Platform'", time: "15 min ago", type: "info" },
+                { action: "Client feedback received for 'Mobile App'", time: "1 hour ago", type: "info" },
+                { action: "Agent execution completed with 95% confidence", time: "2 hours ago", type: "success" },
+                { action: "System maintenance scheduled for tonight", time: "3 hours ago", type: "warning" }
+              ].map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 * index }}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-secondary/20 hover:bg-secondary/30 transition-colors"
+                >
+                  <div className={`w-2 h-2 rounded-full mt-2 ${
+                    item.type === 'success' ? 'bg-emerald-500' :
+                    item.type === 'warning' ? 'bg-yellow-500' :
+                    'bg-blue-500'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground">{item.action}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{item.time}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Client Portal Access Links */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
       >
         <Card>
           <CardHeader>
@@ -855,6 +988,54 @@ export default function Dashboard() {
                   </Link>
                 </motion.div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Quick Stats Widget */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.7 }}
+        className="mt-8"
+      >
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-indigo-500/10 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-indigo-500" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Quick Stats</CardTitle>
+                <CardDescription className="text-sm">
+                  Key performance indicators at a glance
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-500">24</div>
+                <div className="text-xs text-muted-foreground">Tasks Completed</div>
+                <div className="text-xs text-emerald-500 mt-1">+12% this week</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-500">8.5</div>
+                <div className="text-xs text-muted-foreground">Avg. Rating</div>
+                <div className="text-xs text-blue-500 mt-1">+0.3 this month</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-500">156</div>
+                <div className="text-xs text-muted-foreground">AI Interactions</div>
+                <div className="text-xs text-purple-500 mt-1">+23% this week</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-500">3.2h</div>
+                <div className="text-xs text-muted-foreground">Avg. Response</div>
+                <div className="text-xs text-orange-500 mt-1">-15% this week</div>
+              </div>
             </div>
           </CardContent>
         </Card>

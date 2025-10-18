@@ -35,7 +35,7 @@ import {
   MessageSquare,
   ChevronDown,
   ChevronRight,
-  DragHandleDots2
+  GripVertical
 } from "lucide-react";
 
 // Types for the project board data
