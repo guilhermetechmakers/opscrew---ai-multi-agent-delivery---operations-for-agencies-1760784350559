@@ -1,6 +1,6 @@
 /**
  * Database types for intake_proposals table
- * Generated: 2024-12-20T15:00:00Z
+ * Generated: 2024-12-13T12:00:00Z
  */
 
 export interface IntakeProposal {
@@ -8,18 +8,40 @@ export interface IntakeProposal {
   session_id: string;
   user_id: string;
   title: string;
-  content: string;
   version: number;
-  proposal_status: 'drafting' | 'ready' | 'sent' | 'signed' | 'rejected' | 'expired';
-  esign_status: 'not_sent' | 'sent' | 'signed' | 'declined' | 'expired';
-  esign_document_id: string | null;
-  esign_recipient_email: string | null;
-  esign_sent_at: string | null;
-  esign_signed_at: string | null;
-  template_id: string | null;
-  variables: Record<string, any>;
-  approval_required: boolean;
-  approval_status: 'not_required' | 'pending' | 'approved' | 'rejected';
+  status: 'draft' | 'review' | 'approved' | 'sent' | 'signed' | 'rejected';
+  sections: Array<{
+    id: string;
+    title: string;
+    content: string;
+    editable: boolean;
+  }>;
+  pricing: {
+    total: number;
+    breakdown: Array<{
+      item: string;
+      amount: number;
+      description: string;
+    }>;
+  };
+  timeline: {
+    phases: Array<{
+      name: string;
+      duration: string;
+      deliverables: string[];
+    }>;
+  };
+  esignature: {
+    status: 'pending' | 'sent' | 'signed' | 'expired';
+    sentAt?: string;
+    signedAt?: string;
+    expiresAt?: string;
+    signerEmail?: string;
+  };
+  parent_proposal_id: string | null;
+  change_summary: string | null;
+  approval_workflow_id: string | null;
+  approval_status: 'pending' | 'approved' | 'rejected';
   approved_by: string | null;
   approved_at: string | null;
   metadata: Record<string, any>;
@@ -32,18 +54,40 @@ export interface IntakeProposalInsert {
   session_id: string;
   user_id: string;
   title: string;
-  content: string;
   version?: number;
-  proposal_status?: 'drafting' | 'ready' | 'sent' | 'signed' | 'rejected' | 'expired';
-  esign_status?: 'not_sent' | 'sent' | 'signed' | 'declined' | 'expired';
-  esign_document_id?: string | null;
-  esign_recipient_email?: string | null;
-  esign_sent_at?: string | null;
-  esign_signed_at?: string | null;
-  template_id?: string | null;
-  variables?: Record<string, any>;
-  approval_required?: boolean;
-  approval_status?: 'not_required' | 'pending' | 'approved' | 'rejected';
+  status?: 'draft' | 'review' | 'approved' | 'sent' | 'signed' | 'rejected';
+  sections?: Array<{
+    id: string;
+    title: string;
+    content: string;
+    editable: boolean;
+  }>;
+  pricing?: {
+    total: number;
+    breakdown: Array<{
+      item: string;
+      amount: number;
+      description: string;
+    }>;
+  };
+  timeline?: {
+    phases: Array<{
+      name: string;
+      duration: string;
+      deliverables: string[];
+    }>;
+  };
+  esignature?: {
+    status: 'pending' | 'sent' | 'signed' | 'expired';
+    sentAt?: string;
+    signedAt?: string;
+    expiresAt?: string;
+    signerEmail?: string;
+  };
+  parent_proposal_id?: string | null;
+  change_summary?: string | null;
+  approval_workflow_id?: string | null;
+  approval_status?: 'pending' | 'approved' | 'rejected';
   approved_by?: string | null;
   approved_at?: string | null;
   metadata?: Record<string, any>;
@@ -51,18 +95,40 @@ export interface IntakeProposalInsert {
 
 export interface IntakeProposalUpdate {
   title?: string;
-  content?: string;
   version?: number;
-  proposal_status?: 'drafting' | 'ready' | 'sent' | 'signed' | 'rejected' | 'expired';
-  esign_status?: 'not_sent' | 'sent' | 'signed' | 'declined' | 'expired';
-  esign_document_id?: string | null;
-  esign_recipient_email?: string | null;
-  esign_sent_at?: string | null;
-  esign_signed_at?: string | null;
-  template_id?: string | null;
-  variables?: Record<string, any>;
-  approval_required?: boolean;
-  approval_status?: 'not_required' | 'pending' | 'approved' | 'rejected';
+  status?: 'draft' | 'review' | 'approved' | 'sent' | 'signed' | 'rejected';
+  sections?: Array<{
+    id: string;
+    title: string;
+    content: string;
+    editable: boolean;
+  }>;
+  pricing?: {
+    total: number;
+    breakdown: Array<{
+      item: string;
+      amount: number;
+      description: string;
+    }>;
+  };
+  timeline?: {
+    phases: Array<{
+      name: string;
+      duration: string;
+      deliverables: string[];
+    }>;
+  };
+  esignature?: {
+    status: 'pending' | 'sent' | 'signed' | 'expired';
+    sentAt?: string;
+    signedAt?: string;
+    expiresAt?: string;
+    signerEmail?: string;
+  };
+  parent_proposal_id?: string | null;
+  change_summary?: string | null;
+  approval_workflow_id?: string | null;
+  approval_status?: 'pending' | 'approved' | 'rejected';
   approved_by?: string | null;
   approved_at?: string | null;
   metadata?: Record<string, any>;
