@@ -195,3 +195,31 @@ export function useUpdatePassword() {
     },
   })
 }
+
+export function useVerifyEmail() {
+  return useMutation({
+    mutationFn: ({ token }: { token: string }) => authAPI.verifyEmail(token),
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to verify email')
+    },
+  })
+}
+
+export function useResendEmailVerification() {
+  return useMutation({
+    mutationFn: ({ email, redirectTo }: { email: string; redirectTo?: string }) =>
+      authAPI.resendEmailVerification(email, redirectTo),
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to resend verification email')
+    },
+  })
+}
+
+export function useVerifyPasswordResetToken() {
+  return useMutation({
+    mutationFn: ({ token }: { token: string }) => authAPI.verifyPasswordResetToken(token),
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to verify reset token')
+    },
+  })
+}

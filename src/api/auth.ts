@@ -62,6 +62,15 @@ export const authAPI = {
     return { data, error }
   },
 
+  // Verify password reset token
+  async verifyPasswordResetToken(token: string) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: token,
+      type: 'recovery'
+    })
+    return { data, error }
+  },
+
   // Get current session
   async getSession() {
     const { data, error } = await supabase.auth.getSession()
@@ -71,6 +80,27 @@ export const authAPI = {
   // Refresh session
   async refreshSession() {
     const { data, error } = await supabase.auth.refreshSession()
+    return { data, error }
+  },
+
+  // Resend email verification
+  async resendEmailVerification(email: string, redirectTo?: string) {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: redirectTo || `${window.location.origin}/verify-email`
+      }
+    })
+    return { error }
+  },
+
+  // Verify email with token
+  async verifyEmail(token: string, type: 'signup' | 'email_change' = 'signup') {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: token,
+      type
+    })
     return { data, error }
   }
 }

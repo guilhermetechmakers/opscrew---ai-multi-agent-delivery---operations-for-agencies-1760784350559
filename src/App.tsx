@@ -5,6 +5,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
+import EmailVerification from "@/pages/EmailVerification";
+import PasswordReset from "@/pages/PasswordReset";
+import ForgotPassword from "@/pages/ForgotPassword";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
 import IntakeChat from "@/pages/IntakeChat";
@@ -38,6 +41,9 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/verify-email" element={<EmailVerification />} />
+            <Route path="/reset-password" element={<PasswordReset />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* Protected routes with dashboard layout */}
             <Route path="/dashboard" element={<DashboardLayout />}>

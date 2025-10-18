@@ -5,7 +5,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase, type AuthUser, type AuthSession } from '@/lib/supabase'
-import { UserProfile } from '@/types/database/user_profiles'
+import type { UserProfile } from '@/types/database/user_profiles'
 import { toast } from 'sonner'
 
 interface AuthContextType {
