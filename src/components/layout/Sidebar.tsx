@@ -30,8 +30,8 @@ const navigation = [
 
 const agentTools = [
   { name: "AI Agents", href: "/dashboard/agents", icon: Bot },
-  { name: "Automation", href: "/dashboard/automation", icon: Zap },
-  { name: "Launch", href: "/dashboard/launch", icon: Rocket },
+  { name: "Executions", href: "/dashboard/executions", icon: Zap },
+  { name: "Automation", href: "/dashboard/automation", icon: Rocket },
   { name: "Security", href: "/dashboard/security", icon: Shield },
 ];
 

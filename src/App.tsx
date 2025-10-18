@@ -8,6 +8,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
 import IntakeChat from "@/pages/IntakeChat";
 import ProjectBoard from "@/pages/ProjectBoard";
+import AgentManagement from "@/pages/AgentManagement";
+import AgentExecutions from "@/pages/AgentExecutions";
 import NotFound from "@/pages/NotFound";
 
 // React Query client with optimal defaults
@@ -37,6 +39,8 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="intake" element={<IntakeChat />} />
             <Route path="projects" element={<ProjectBoard />} />
+            <Route path="agents" element={<AgentManagement />} />
+            <Route path="executions" element={<AgentExecutions />} />
           </Route>
           
           {/* 404 route */}

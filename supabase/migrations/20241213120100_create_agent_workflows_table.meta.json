@@ -1,0 +1,12 @@
+{
+  "migration_name": "20241213120100_create_agent_workflows_table",
+  "created_at": "2024-12-13T12:01:00Z",
+  "description": "Create agent workflows table for workflow definitions and state machine configurations",
+  "tables_created": ["agent_workflows"],
+  "tables_modified": [],
+  "tables_deleted": [],
+  "breaking_changes": false,
+  "rollback_sql": "DROP TABLE IF EXISTS agent_workflows CASCADE;",
+  "estimated_rows": 0,
+  "requires_downtime": false
+}

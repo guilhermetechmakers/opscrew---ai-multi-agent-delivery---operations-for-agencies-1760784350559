@@ -1,0 +1,12 @@
+{
+  "migration_name": "20241213120300_create_agent_audit_logs_table",
+  "created_at": "2024-12-13T12:03:00Z",
+  "description": "Create agent audit logs table for comprehensive audit logging of all agent activities",
+  "tables_created": ["agent_audit_logs"],
+  "tables_modified": [],
+  "tables_deleted": [],
+  "breaking_changes": false,
+  "rollback_sql": "DROP TABLE IF EXISTS agent_audit_logs CASCADE;",
+  "estimated_rows": 0,
+  "requires_downtime": false
+}
