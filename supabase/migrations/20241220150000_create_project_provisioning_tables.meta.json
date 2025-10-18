@@ -1,0 +1,12 @@
+{
+  "migration_name": "20241220150000_create_project_provisioning_tables",
+  "created_at": "2024-12-20T15:00:00Z",
+  "description": "Create project provisioning tables for stack templates, requests, and logs",
+  "tables_created": ["project_provisioning_templates", "project_provisioning_requests", "project_provisioning_logs"],
+  "tables_modified": [],
+  "tables_deleted": [],
+  "breaking_changes": false,
+  "rollback_sql": "DROP TABLE IF EXISTS project_provisioning_logs CASCADE; DROP TABLE IF EXISTS project_provisioning_requests CASCADE; DROP TABLE IF EXISTS project_provisioning_templates CASCADE;",
+  "estimated_rows": 0,
+  "requires_downtime": false
+}

@@ -148,7 +148,7 @@ const quickActions = [
   {
     title: "Provision Project",
     description: "Set up repos and environments",
-    icon: GitBranch,
+    icon: Rocket,
     href: "/dashboard/projects/provision",
     color: "bg-gradient-to-br from-emerald-500 to-emerald-600",
     hoverColor: "hover:from-emerald-600 hover:to-emerald-700",
