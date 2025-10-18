@@ -10,6 +10,7 @@ import IntakeChat from "@/pages/IntakeChat";
 import ProjectBoard from "@/pages/ProjectBoard";
 import AgentManagement from "@/pages/AgentManagement";
 import AgentExecutions from "@/pages/AgentExecutions";
+import MeetingSummary from "@/pages/MeetingSummary";
 import NotFound from "@/pages/NotFound";
 
 // React Query client with optimal defaults
@@ -39,6 +40,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="intake" element={<IntakeChat />} />
             <Route path="projects" element={<ProjectBoard />} />
+            <Route path="meetings" element={<MeetingSummary />} />
             <Route path="agents" element={<AgentManagement />} />
             <Route path="executions" element={<AgentExecutions />} />
           </Route>

@@ -1,0 +1,12 @@
+{
+  "migration_name": "20241213120500_create_meetings_and_tickets_tables",
+  "created_at": "2024-12-13T12:05:00Z",
+  "description": "Create meetings, meeting_transcripts, meeting_summaries, and tickets tables for meeting summary and ticket management functionality",
+  "tables_created": ["meetings", "meeting_transcripts", "meeting_summaries", "tickets"],
+  "tables_modified": [],
+  "tables_deleted": [],
+  "breaking_changes": false,
+  "rollback_sql": "DROP TABLE IF EXISTS tickets CASCADE; DROP TABLE IF EXISTS meeting_summaries CASCADE; DROP TABLE IF EXISTS meeting_transcripts CASCADE; DROP TABLE IF EXISTS meetings CASCADE;",
+  "estimated_rows": 0,
+  "requires_downtime": false
+}

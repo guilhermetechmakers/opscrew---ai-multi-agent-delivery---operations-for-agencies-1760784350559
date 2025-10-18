@@ -13,7 +13,8 @@ import {
   Bot,
   Zap,
   Rocket,
-  Shield
+  Shield,
+  Video
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Intake Chat", href: "/dashboard/intake", icon: MessageSquare },
   { name: "Projects", href: "/dashboard/projects", icon: FolderOpen },
+  { name: "Meetings", href: "/dashboard/meetings", icon: Video },
   { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Team", href: "/dashboard/team", icon: Users },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
