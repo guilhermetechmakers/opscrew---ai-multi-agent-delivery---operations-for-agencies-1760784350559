@@ -15,6 +15,68 @@ import type {
   TokenUsage 
 } from '@/types/database'
 
+// Enhanced interfaces for advanced orchestration
+export interface AgentOrchestrationConfig {
+  maxConcurrentExecutions: number
+  retryPolicy: {
+    maxRetries: number
+    backoffMultiplier: number
+    maxBackoffDelay: number
+  }
+  timeoutPolicy: {
+    defaultTimeout: number
+    maxTimeout: number
+  }
+  approvalPolicy: {
+    requireApproval: boolean
+    approvalTimeout: number
+    escalationPolicy: 'auto_approve' | 'escalate' | 'fail'
+  }
+}
+
+export interface AgentWorkflowStep {
+  id: string
+  type: 'agent_call' | 'condition' | 'delay' | 'webhook' | 'approval_gate'
+  agent_id?: string
+  condition?: string
+  delay_ms?: number
+  webhook_url?: string
+  approval_required?: boolean
+  approval_timeout?: number
+  next_steps: string[]
+  error_handling: {
+    on_error: 'retry' | 'fail' | 'skip' | 'escalate'
+    max_retries?: number
+    retry_delay?: number
+  }
+  metadata: Record<string, any>
+}
+
+export interface WorkflowExecutionContext {
+  workflowId: string
+  sessionId: string
+  userId: string
+  projectId?: string
+  inputData: Record<string, any>
+  metadata: Record<string, any>
+  variables: Record<string, any>
+  stepResults: Record<string, any>
+  currentStep: string
+  status: 'running' | 'paused' | 'completed' | 'failed' | 'cancelled'
+  startedAt: string
+  lastActivityAt: string
+}
+
+export interface AgentExecutionQueue {
+  executionId: string
+  priority: number
+  scheduledAt: string
+  context: AgentExecutionContext
+  retryCount: number
+  maxRetries: number
+  status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
+}
+
 // Enhanced interfaces for the AI Engine
 export interface AgentMemory {
   id: string
@@ -106,14 +168,41 @@ export class AIEngine {
   private static instance: AIEngine
   private memoryCache: Map<string, AgentMemory[]> = new Map()
   private workflowStates: Map<string, WorkflowState> = new Map()
+  private workflowContexts: Map<string, WorkflowExecutionContext> = new Map()
   private rateLimitCounters: Map<string, { requests: number; tokens: number; window: number }> = new Map()
   private executionQueue: Map<string, Promise<AgentExecutionResult>> = new Map()
+  private agentExecutionQueue: AgentExecutionQueue[] = []
+  private orchestrationConfig: AgentOrchestrationConfig
+  private isProcessingQueue: boolean = false
 
   static getInstance(): AIEngine {
     if (!AIEngine.instance) {
       AIEngine.instance = new AIEngine()
     }
     return AIEngine.instance
+  }
+
+  constructor() {
+    this.orchestrationConfig = {
+      maxConcurrentExecutions: 10,
+      retryPolicy: {
+        maxRetries: 3,
+        backoffMultiplier: 2,
+        maxBackoffDelay: 30000
+      },
+      timeoutPolicy: {
+        defaultTimeout: 30000,
+        maxTimeout: 300000
+      },
+      approvalPolicy: {
+        requireApproval: true,
+        approvalTimeout: 3600000, // 1 hour
+        escalationPolicy: 'escalate'
+      }
+    }
+    
+    // Start queue processor
+    this.startQueueProcessor()
   }
 
   /**
@@ -139,6 +228,108 @@ export class AIEngine {
   }
 
   /**
+   * Queue an agent execution for processing
+   */
+  async queueAgentExecution(
+    context: AgentExecutionContext,
+    priority: number = 1,
+    scheduledAt?: string
+  ): Promise<string> {
+    const executionId = `exec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    
+    const queueItem: AgentExecutionQueue = {
+      executionId,
+      priority,
+      scheduledAt: scheduledAt || new Date().toISOString(),
+      context,
+      retryCount: 0,
+      maxRetries: this.orchestrationConfig.retryPolicy.maxRetries,
+      status: 'queued'
+    }
+
+    this.agentExecutionQueue.push(queueItem)
+    this.agentExecutionQueue.sort((a, b) => b.priority - a.priority)
+
+    // Log queue event
+    await this.logAuditEvent({
+      user_id: context.userId,
+      agent_id: context.agentId,
+      execution_id: executionId,
+      event_type: 'execution_queued',
+      event_category: 'orchestration',
+      event_data: { priority, scheduledAt }
+    })
+
+    return executionId
+  }
+
+  /**
+   * Execute multiple agents in parallel with orchestration
+   */
+  async executeAgentBatch(
+    contexts: AgentExecutionContext[],
+    options: {
+      maxConcurrency?: number
+      failFast?: boolean
+      timeout?: number
+    } = {}
+  ): Promise<AgentExecutionResult[]> {
+    const { maxConcurrency = 5, failFast = false, timeout = 60000 } = options
+    const results: AgentExecutionResult[] = []
+    const errors: Error[] = []
+
+    // Process in batches to respect concurrency limits
+    for (let i = 0; i < contexts.length; i += maxConcurrency) {
+      const batch = contexts.slice(i, i + maxConcurrency)
+      
+      const batchPromises = batch.map(async (context) => {
+        try {
+          const result = await Promise.race([
+            this.executeAgent(context),
+            new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error('Execution timeout')), timeout)
+            )
+          ])
+          return result
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          if (failFast) {
+            throw error
+          }
+          errors.push(new Error(`Agent ${context.agentId} failed: ${errorMessage}`))
+          return {
+            executionId: `failed-${Date.now()}`,
+            status: 'failed' as const,
+            output: {},
+            confidence: 0,
+            tokenUsage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+            error: errorMessage
+          }
+        }
+      })
+
+      const batchResults = await Promise.allSettled(batchPromises)
+      
+      for (const result of batchResults) {
+        if (result.status === 'fulfilled') {
+          results.push(result.value)
+        } else {
+          results.push({
+            executionId: `failed-${Date.now()}`,
+            status: 'failed',
+            output: {},
+            confidence: 0,
+            tokenUsage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+            error: result.reason?.message || 'Unknown error'
+          })
+        }
+      }
+    }
+
+    return results
+  }
+
+  /**
    * Execute a workflow with multiple agents
    */
   async executeWorkflow(
@@ -155,6 +346,24 @@ export class AIEngine {
         throw new Error(`Workflow not found: ${workflowId}`)
       }
 
+      // Initialize workflow execution context
+      const workflowContext: WorkflowExecutionContext = {
+        workflowId,
+        sessionId,
+        userId: context.userId,
+        projectId: context.projectId,
+        inputData: context.inputData,
+        metadata: context.metadata || {},
+        variables: { ...context.inputData },
+        stepResults: {},
+        currentStep: workflow.steps[0]?.id || '',
+        status: 'running',
+        startedAt: new Date().toISOString(),
+        lastActivityAt: new Date().toISOString()
+      }
+      
+      this.workflowContexts.set(sessionId, workflowContext)
+
       // Initialize workflow state
       const workflowState: WorkflowState = {
         workflowId,
@@ -170,7 +379,7 @@ export class AIEngine {
       
       this.workflowStates.set(sessionId, workflowState)
 
-      // Execute workflow steps
+      // Execute workflow steps with enhanced orchestration
       const results: AgentExecutionResult[] = []
       let totalTokenUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
 
@@ -184,13 +393,18 @@ export class AIEngine {
             memoryContext: await this.getAgentMemory(step.agent_id, sessionId)
           }
 
-          const result = await this.executeAgent(stepContext)
+          const result = await this.executeWorkflowStep(step, stepContext, workflowContext)
           results.push(result)
 
           // Update workflow state
           workflowState.completedSteps.push(step.id)
           workflowState.stepData[step.id] = result.output
           workflowState.currentStep = step.next_steps[0] || ''
+
+          // Update workflow context
+          workflowContext.stepResults[step.id] = result.output
+          workflowContext.currentStep = step.next_steps[0] || ''
+          workflowContext.lastActivityAt = new Date().toISOString()
 
           // Accumulate token usage
           totalTokenUsage.prompt_tokens += result.tokenUsage.prompt_tokens
@@ -200,6 +414,29 @@ export class AIEngine {
           // Check if we should continue based on step configuration
           if (result.status === 'failed' && step.error_handling.on_error === 'fail') {
             workflowState.status = 'failed'
+            workflowContext.status = 'failed'
+            break
+          }
+        } else if (step.type === 'condition') {
+          // Handle conditional logic
+          const shouldContinue = await this.evaluateCondition(step.condition!, workflowContext)
+          if (!shouldContinue) {
+            workflowState.status = 'completed'
+            workflowContext.status = 'completed'
+            break
+          }
+        } else if (step.type === 'delay' && step.delay_ms) {
+          // Handle delays
+          await new Promise(resolve => setTimeout(resolve, step.delay_ms))
+        } else if (step.type === 'webhook' && step.webhook_url) {
+          // Handle webhook calls
+          await this.executeWebhook(step.webhook_url, workflowContext)
+        } else if (step.type === 'approval_gate' && step.approval_required) {
+          // Handle approval gates
+          const approvalResult = await this.handleApprovalGate(step, workflowContext)
+          if (!approvalResult.approved) {
+            workflowState.status = 'paused'
+            workflowContext.status = 'paused'
             break
           }
         }
@@ -207,6 +444,7 @@ export class AIEngine {
 
       workflowState.status = 'completed'
       workflowState.updatedAt = new Date().toISOString()
+      workflowContext.status = 'completed'
 
       return {
         workflowId,
@@ -225,6 +463,11 @@ export class AIEngine {
       if (workflowState) {
         workflowState.status = 'failed'
         workflowState.updatedAt = new Date().toISOString()
+      }
+
+      const workflowContext = this.workflowContexts.get(sessionId)
+      if (workflowContext) {
+        workflowContext.status = 'failed'
       }
 
       return {
@@ -348,6 +591,125 @@ export class AIEngine {
   }
 
   /**
+   * Get contextual memory for an agent based on current context
+   */
+  async getContextualMemory(
+    agentId: string,
+    sessionId: string,
+    currentContext: Record<string, any>,
+    limit: number = 5
+  ): Promise<AgentMemory[]> {
+    try {
+      // Build context query from current context
+      const contextQuery = Object.entries(currentContext)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(' ')
+
+      // Search for relevant memories
+      const memories = await this.searchAgentMemory(agentId, sessionId, contextQuery, limit * 2)
+      
+      // Filter and rank by relevance (simplified)
+      const relevantMemories = memories
+        .filter(memory => {
+          const content = memory.content.toLowerCase()
+          return Object.values(currentContext).some(value => 
+            content.includes(String(value).toLowerCase())
+          )
+        })
+        .slice(0, limit)
+
+      return relevantMemories
+    } catch (error) {
+      console.error('Failed to get contextual memory:', error)
+      return []
+    }
+  }
+
+  /**
+   * Consolidate agent memory by merging similar memories
+   */
+  async consolidateAgentMemory(
+    agentId: string,
+    sessionId: string,
+    threshold: number = 0.8
+  ): Promise<void> {
+    try {
+      const memories = await this.getAgentMemory(agentId, sessionId)
+      
+      // Group similar memories
+      const groups: AgentMemory[][] = []
+      const processed = new Set<string>()
+
+      for (const memory of memories) {
+        if (processed.has(memory.id)) continue
+
+        const group = [memory]
+        processed.add(memory.id)
+
+        for (const otherMemory of memories) {
+          if (processed.has(otherMemory.id)) continue
+
+          // Simple similarity check (in production, use proper vector similarity)
+          const similarity = this.calculateSimilarity(memory.content, otherMemory.content)
+          if (similarity > threshold) {
+            group.push(otherMemory)
+            processed.add(otherMemory.id)
+          }
+        }
+
+        groups.push(group)
+      }
+
+      // Consolidate each group
+      for (const group of groups) {
+        if (group.length <= 1) continue
+
+        // Merge memories in group
+        const consolidatedContent = group
+          .map(m => m.content)
+          .join('\n\n---\n\n')
+
+        const consolidatedMetadata = {
+          ...group[0].metadata,
+          consolidated_from: group.map(m => m.id),
+          consolidated_at: new Date().toISOString()
+        }
+
+        // Create consolidated memory
+        await this.storeAgentMemory(
+          agentId,
+          sessionId,
+          consolidatedContent,
+          consolidatedMetadata
+        )
+
+        // Delete original memories
+        const idsToDelete = group.map(m => m.id)
+        await supabase
+          .from('agent_memory')
+          .delete()
+          .in('id', idsToDelete)
+      }
+    } catch (error) {
+      console.error('Failed to consolidate agent memory:', error)
+    }
+  }
+
+  /**
+   * Calculate similarity between two text strings
+   */
+  private calculateSimilarity(text1: string, text2: string): number {
+    // Simple Jaccard similarity (in production, use proper vector similarity)
+    const words1 = new Set(text1.toLowerCase().split(/\s+/))
+    const words2 = new Set(text2.toLowerCase().split(/\s+/))
+    
+    const intersection = new Set([...words1].filter(x => words2.has(x)))
+    const union = new Set([...words1, ...words2])
+    
+    return intersection.size / union.size
+  }
+
+  /**
    * Check rate limits for a user/org
    */
   async checkRateLimit(
@@ -385,6 +747,231 @@ export class AIEngine {
       allowed: true, 
       remaining: limits.requestsPerMinute - counters.requests 
     }
+  }
+
+  /**
+   * Get comprehensive execution analytics with advanced metrics
+   */
+  async getAdvancedExecutionAnalytics(
+    userId: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<{
+    overview: {
+      totalExecutions: number
+      successfulExecutions: number
+      failedExecutions: number
+      averageConfidence: number
+      totalTokenUsage: number
+      totalCost: number
+      averageExecutionTime: number
+    }
+    byAgent: Record<string, {
+      type: string
+      executions: number
+      successful: number
+      failed: number
+      totalTokens: number
+      averageConfidence: number
+      averageExecutionTime: number
+      successRate: number
+    }>
+    byTime: {
+      hourly: Array<{ hour: number; executions: number; tokens: number; cost: number }>
+      daily: Array<{ date: string; executions: number; tokens: number; cost: number }>
+    }
+    performance: {
+      p95ExecutionTime: number
+      p99ExecutionTime: number
+      averageQueueTime: number
+      retryRate: number
+    }
+    costs: {
+      totalCost: number
+      costByModel: Record<string, number>
+      costByAgent: Record<string, number>
+      costTrend: Array<{ date: string; cost: number }>
+    }
+  }> {
+    let query = supabase
+      .from('agent_executions')
+      .select('*, agents(name, type)')
+      .eq('user_id', userId)
+
+    if (startDate) {
+      query = query.gte('created_at', startDate)
+    }
+    if (endDate) {
+      query = query.lte('created_at', endDate)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      throw new Error(`Failed to get execution analytics: ${error.message}`)
+    }
+
+    const executions = data || []
+    
+    // Calculate overview metrics
+    const totalExecutions = executions.length
+    const successfulExecutions = executions.filter(e => e.status === 'completed').length
+    const failedExecutions = executions.filter(e => e.status === 'failed').length
+    const averageConfidence = executions.reduce((sum, e) => sum + (e.confidence_score || 0), 0) / totalExecutions
+    const totalTokenUsage = executions.reduce((sum, e) => sum + e.total_tokens, 0)
+    const totalCost = executions.reduce((sum, e) => sum + (e.total_tokens * 0.0001), 0)
+    const averageExecutionTime = executions.reduce((sum, e) => sum + (e.duration_ms || 0), 0) / totalExecutions
+
+    // Calculate by-agent metrics
+    const byAgent = executions.reduce((acc, execution) => {
+      const agentName = execution.agents?.name || 'Unknown'
+      const agentType = execution.agents?.type || 'unknown'
+      
+      if (!acc[agentName]) {
+        acc[agentName] = {
+          type: agentType,
+          executions: 0,
+          successful: 0,
+          failed: 0,
+          totalTokens: 0,
+          averageConfidence: 0,
+          averageExecutionTime: 0,
+          successRate: 0
+        }
+      }
+      
+      acc[agentName].executions += 1
+      if (execution.status === 'completed') acc[agentName].successful += 1
+      if (execution.status === 'failed') acc[agentName].failed += 1
+      acc[agentName].totalTokens += execution.total_tokens
+      acc[agentName].averageConfidence += execution.confidence_score || 0
+      acc[agentName].averageExecutionTime += execution.duration_ms || 0
+      
+      return acc
+    }, {} as Record<string, any>)
+
+    // Calculate averages and success rates
+    Object.keys(byAgent).forEach(agentName => {
+      const agent = byAgent[agentName]
+      agent.averageConfidence = agent.averageConfidence / agent.executions
+      agent.averageExecutionTime = agent.averageExecutionTime / agent.executions
+      agent.successRate = (agent.successful / agent.executions) * 100
+    })
+
+    // Calculate time-based metrics
+    const hourly = this.calculateHourlyMetrics(executions)
+    const daily = this.calculateDailyMetrics(executions)
+
+    // Calculate performance metrics
+    const executionTimes = executions.map(e => e.duration_ms || 0).sort((a, b) => a - b)
+    const p95ExecutionTime = executionTimes[Math.floor(executionTimes.length * 0.95)] || 0
+    const p99ExecutionTime = executionTimes[Math.floor(executionTimes.length * 0.99)] || 0
+    const averageQueueTime = 0 // Would need queue data
+    const retryRate = executions.filter(e => e.retry_count > 0).length / totalExecutions
+
+    // Calculate cost metrics
+    const costByModel = executions.reduce((acc, e) => {
+      const model = e.metadata?.model || 'unknown'
+      const cost = e.total_tokens * 0.0001
+      acc[model] = (acc[model] || 0) + cost
+      return acc
+    }, {} as Record<string, number>)
+
+    const costByAgent = Object.keys(byAgent).reduce((acc, agentName) => {
+      acc[agentName] = byAgent[agentName].totalTokens * 0.0001
+      return acc
+    }, {} as Record<string, number>)
+
+    const costTrend = this.calculateCostTrend(executions)
+
+    return {
+      overview: {
+        totalExecutions,
+        successfulExecutions,
+        failedExecutions,
+        averageConfidence,
+        totalTokenUsage,
+        totalCost,
+        averageExecutionTime
+      },
+      byAgent,
+      byTime: {
+        hourly,
+        daily
+      },
+      performance: {
+        p95ExecutionTime,
+        p99ExecutionTime,
+        averageQueueTime,
+        retryRate
+      },
+      costs: {
+        totalCost,
+        costByModel,
+        costByAgent,
+        costTrend
+      }
+    }
+  }
+
+  /**
+   * Calculate hourly metrics
+   */
+  private calculateHourlyMetrics(executions: any[]): Array<{ hour: number; executions: number; tokens: number; cost: number }> {
+    const hourly = Array.from({ length: 24 }, (_, i) => ({
+      hour: i,
+      executions: 0,
+      tokens: 0,
+      cost: 0
+    }))
+
+    executions.forEach(execution => {
+      const hour = new Date(execution.created_at).getHours()
+      hourly[hour].executions += 1
+      hourly[hour].tokens += execution.total_tokens
+      hourly[hour].cost += execution.total_tokens * 0.0001
+    })
+
+    return hourly
+  }
+
+  /**
+   * Calculate daily metrics
+   */
+  private calculateDailyMetrics(executions: any[]): Array<{ date: string; executions: number; tokens: number; cost: number }> {
+    const dailyMap = new Map<string, { executions: number; tokens: number; cost: number }>()
+
+    executions.forEach(execution => {
+      const date = new Date(execution.created_at).toISOString().split('T')[0]
+      if (!dailyMap.has(date)) {
+        dailyMap.set(date, { executions: 0, tokens: 0, cost: 0 })
+      }
+      const dayData = dailyMap.get(date)!
+      dayData.executions += 1
+      dayData.tokens += execution.total_tokens
+      dayData.cost += execution.total_tokens * 0.0001
+    })
+
+    return Array.from(dailyMap.entries())
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+  }
+
+  /**
+   * Calculate cost trend
+   */
+  private calculateCostTrend(executions: any[]): Array<{ date: string; cost: number }> {
+    const dailyMap = new Map<string, number>()
+
+    executions.forEach(execution => {
+      const date = new Date(execution.created_at).toISOString().split('T')[0]
+      const cost = execution.total_tokens * 0.0001
+      dailyMap.set(date, (dailyMap.get(date) || 0) + cost)
+    })
+
+    return Array.from(dailyMap.entries())
+      .map(([date, cost]) => ({ date, cost }))
+      .sort((a, b) => a.date.localeCompare(b.date))
   }
 
   /**
@@ -439,6 +1026,223 @@ export class AIEngine {
     }
 
     return data
+  }
+
+  /**
+   * Create default personas for all agent types
+   */
+  async createDefaultPersonas(userId: string): Promise<AgentPersona[]> {
+    const defaultPersonas: Omit<AgentPersona, 'id'>[] = [
+      {
+        name: 'Intake Specialist',
+        type: 'intake',
+        personality: 'Professional, empathetic, and thorough. Focuses on understanding client needs and qualifying leads effectively.',
+        communicationStyle: 'Warm, professional, and consultative. Asks probing questions to understand requirements.',
+        expertise: ['lead qualification', 'requirements gathering', 'proposal drafting', 'client communication'],
+        constraints: {
+          maxProposalLength: 5000,
+          requiredFields: ['budget', 'timeline', 'scope', 'stakeholders'],
+          approvalRequired: true
+        },
+        allowedActions: ['qualify_lead', 'draft_proposal', 'schedule_meeting', 'request_information'],
+        approvalThreshold: 0.7,
+        metadata: {
+          version: '1.0',
+          createdBy: 'system'
+        }
+      },
+      {
+        name: 'Project Spin-Up Expert',
+        type: 'spin-up',
+        personality: 'Technical, organized, and efficient. Focuses on setting up projects quickly and correctly.',
+        communicationStyle: 'Direct, technical, and solution-oriented. Provides clear status updates.',
+        expertise: ['project setup', 'infrastructure provisioning', 'repository management', 'environment configuration'],
+        constraints: {
+          maxSetupTime: 3600000, // 1 hour
+          requiredIntegrations: ['github', 'vercel', 'cloudflare'],
+          rollbackEnabled: true
+        },
+        allowedActions: ['create_repository', 'setup_environment', 'configure_ci_cd', 'create_client_portal'],
+        approvalThreshold: 0.8,
+        metadata: {
+          version: '1.0',
+          createdBy: 'system'
+        }
+      },
+      {
+        name: 'Project Manager',
+        type: 'pm',
+        personality: 'Organized, proactive, and detail-oriented. Focuses on keeping projects on track and team aligned.',
+        communicationStyle: 'Clear, structured, and motivational. Provides regular updates and identifies blockers.',
+        expertise: ['project planning', 'sprint management', 'task assignment', 'progress tracking', 'risk management'],
+        constraints: {
+          maxSprintLength: 14, // days
+          minTaskEstimate: 1, // hours
+          maxTaskEstimate: 40, // hours
+          dailyStandupRequired: true
+        },
+        allowedActions: ['plan_sprint', 'assign_tasks', 'track_progress', 'identify_blockers', 'schedule_meetings'],
+        approvalThreshold: 0.6,
+        metadata: {
+          version: '1.0',
+          createdBy: 'system'
+        }
+      },
+      {
+        name: 'Communication Specialist',
+        type: 'comms',
+        personality: 'Clear, professional, and engaging. Focuses on maintaining excellent client communication.',
+        communicationStyle: 'Professional, warm, and informative. Adapts tone to audience and context.',
+        expertise: ['client communication', 'meeting summaries', 'status updates', 'stakeholder management'],
+        constraints: {
+          maxUpdateLength: 2000,
+          requiredTone: 'professional',
+          includeMetrics: true,
+          ccStakeholders: true
+        },
+        allowedActions: ['send_updates', 'summarize_meetings', 'schedule_communications', 'manage_stakeholders'],
+        approvalThreshold: 0.5,
+        metadata: {
+          version: '1.0',
+          createdBy: 'system'
+        }
+      },
+      {
+        name: 'Research & Development Assistant',
+        type: 'research',
+        personality: 'Analytical, thorough, and innovative. Focuses on research and technical documentation.',
+        communicationStyle: 'Technical, precise, and well-documented. Provides detailed analysis and recommendations.',
+        expertise: ['technical research', 'specification writing', 'code analysis', 'architecture design', 'testing strategies'],
+        constraints: {
+          maxSpecLength: 10000,
+          includeCodeExamples: true,
+          requireTesting: true,
+          citeSources: true
+        },
+        allowedActions: ['research_technologies', 'write_specs', 'analyze_code', 'design_architecture', 'create_tests'],
+        approvalThreshold: 0.8,
+        metadata: {
+          version: '1.0',
+          createdBy: 'system'
+        }
+      },
+      {
+        name: 'Launch Coordinator',
+        type: 'launch',
+        personality: 'Meticulous, reliable, and safety-focused. Ensures smooth and successful deployments.',
+        communicationStyle: 'Precise, systematic, and reassuring. Provides clear checklists and status updates.',
+        expertise: ['deployment management', 'quality assurance', 'release coordination', 'rollback procedures'],
+        constraints: {
+          requireTesting: true,
+          requireApproval: true,
+          maxDeploymentTime: 1800000, // 30 minutes
+          rollbackPlanRequired: true
+        },
+        allowedActions: ['run_checks', 'coordinate_deployment', 'manage_rollback', 'notify_stakeholders'],
+        approvalThreshold: 0.9,
+        metadata: {
+          version: '1.0',
+          createdBy: 'system'
+        }
+      },
+      {
+        name: 'Handover Specialist',
+        type: 'handover',
+        personality: 'Thorough, organized, and client-focused. Ensures smooth project transitions.',
+        communicationStyle: 'Comprehensive, clear, and supportive. Provides detailed documentation and training.',
+        expertise: ['documentation', 'knowledge transfer', 'training', 'governance', 'renewal management'],
+        constraints: {
+          requireDocumentation: true,
+          includeTraining: true,
+          maxHandoverTime: 7, // days
+          clientApprovalRequired: true
+        },
+        allowedActions: ['create_documentation', 'schedule_training', 'prepare_handover', 'manage_renewals'],
+        approvalThreshold: 0.7,
+        metadata: {
+          version: '1.0',
+          createdBy: 'system'
+        }
+      },
+      {
+        name: 'Support Agent',
+        type: 'support',
+        personality: 'Helpful, patient, and solution-oriented. Focuses on resolving issues quickly and effectively.',
+        communicationStyle: 'Friendly, empathetic, and efficient. Provides clear solutions and next steps.',
+        expertise: ['troubleshooting', 'issue resolution', 'customer support', 'sla_management'],
+        constraints: {
+          maxResponseTime: 3600000, // 1 hour
+          requireEscalation: true,
+          trackResolution: true,
+          followUpRequired: true
+        },
+        allowedActions: ['triage_tickets', 'resolve_issues', 'escalate_problems', 'schedule_followups'],
+        approvalThreshold: 0.6,
+        metadata: {
+          version: '1.0',
+          createdBy: 'system'
+        }
+      }
+    ]
+
+    const createdPersonas: AgentPersona[] = []
+    
+    for (const persona of defaultPersonas) {
+      try {
+        const createdPersona = await this.createPersona({
+          ...persona,
+          user_id: userId
+        })
+        createdPersonas.push(createdPersona)
+      } catch (error) {
+        console.error(`Failed to create persona ${persona.name}:`, error)
+      }
+    }
+
+    return createdPersonas
+  }
+
+  /**
+   * Update persona with validation
+   */
+  async updatePersona(
+    personaId: string,
+    updates: Partial<AgentPersona>,
+    userId: string
+  ): Promise<AgentPersona> {
+    // Validate persona constraints
+    if (updates.constraints) {
+      this.validatePersonaConstraints(updates.constraints)
+    }
+
+    const { data, error } = await supabase
+      .from('agent_personas')
+      .update(updates)
+      .eq('id', personaId)
+      .eq('user_id', userId)
+      .select()
+      .single()
+
+    if (error) {
+      throw new Error(`Failed to update persona: ${error.message}`)
+    }
+
+    return data
+  }
+
+  /**
+   * Validate persona constraints
+   */
+  private validatePersonaConstraints(constraints: Record<string, any>): void {
+    // Add validation logic for persona constraints
+    // This is a placeholder for more sophisticated validation
+    if (constraints.maxProposalLength && constraints.maxProposalLength < 100) {
+      throw new Error('Max proposal length must be at least 100 characters')
+    }
+    
+    if (constraints.maxSetupTime && constraints.maxSetupTime < 60000) {
+      throw new Error('Max setup time must be at least 1 minute')
+    }
   }
 
   /**
@@ -520,6 +1324,212 @@ export class AIEngine {
       totalCost,
       byAgent
     }
+  }
+
+  /**
+   * Execute a single workflow step with enhanced orchestration
+   */
+  private async executeWorkflowStep(
+    step: AgentWorkflowStep,
+    context: AgentExecutionContext,
+    workflowContext: WorkflowExecutionContext
+  ): Promise<AgentExecutionResult> {
+    try {
+      // Add workflow context to agent input
+      const enhancedInput = {
+        ...context.inputData,
+        workflowContext: {
+          variables: workflowContext.variables,
+          stepResults: workflowContext.stepResults,
+          currentStep: step.id
+        }
+      }
+
+      const enhancedContext = {
+        ...context,
+        inputData: enhancedInput
+      }
+
+      const result = await this.executeAgent(enhancedContext)
+
+      // Update workflow variables with step output
+      if (result.output && typeof result.output === 'object') {
+        Object.assign(workflowContext.variables, result.output)
+      }
+
+      return result
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      
+      return {
+        executionId: `failed-${Date.now()}`,
+        status: 'failed',
+        output: {},
+        confidence: 0,
+        tokenUsage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+        error: errorMessage
+      }
+    }
+  }
+
+  /**
+   * Evaluate a condition in workflow context
+   */
+  private async evaluateCondition(condition: string, context: WorkflowExecutionContext): Promise<boolean> {
+    try {
+      // Simple condition evaluation (in production, use a proper expression evaluator)
+      const variables = context.variables
+      const stepResults = context.stepResults
+      
+      // Replace variables in condition
+      let evaluatedCondition = condition
+      for (const [key, value] of Object.entries(variables)) {
+        evaluatedCondition = evaluatedCondition.replace(new RegExp(`\\$\\{${key}\\}`, 'g'), String(value))
+      }
+      
+      // Simple evaluation (extend as needed)
+      return eval(evaluatedCondition) === true
+    } catch (error) {
+      console.error('Failed to evaluate condition:', error)
+      return false
+    }
+  }
+
+  /**
+   * Execute a webhook call
+   */
+  private async executeWebhook(url: string, context: WorkflowExecutionContext): Promise<void> {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          workflowId: context.workflowId,
+          sessionId: context.sessionId,
+          variables: context.variables,
+          stepResults: context.stepResults
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Webhook failed: ${response.status} ${response.statusText}`)
+      }
+    } catch (error) {
+      console.error('Webhook execution failed:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Handle approval gates in workflows
+   */
+  private async handleApprovalGate(
+    step: AgentWorkflowStep,
+    context: WorkflowExecutionContext
+  ): Promise<{ approved: boolean; approvalId?: string }> {
+    try {
+      // Create approval request
+      const approvalId = `approval-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      
+      // Store approval request in database
+      const { error } = await supabase
+        .from('workflow_approvals')
+        .insert({
+          id: approvalId,
+          workflow_id: context.workflowId,
+          session_id: context.sessionId,
+          step_id: step.id,
+          user_id: context.userId,
+          approval_data: {
+            variables: context.variables,
+            stepResults: context.stepResults,
+            step: step
+          },
+          status: 'pending',
+          timeout_at: new Date(Date.now() + (step.approval_timeout || 3600000)).toISOString()
+        })
+
+      if (error) {
+        throw new Error(`Failed to create approval request: ${error.message}`)
+      }
+
+      // Log approval event
+      await this.logAuditEvent({
+        user_id: context.userId,
+        event_type: 'approval_requested',
+        event_category: 'workflow',
+        event_data: { approvalId, stepId: step.id, workflowId: context.workflowId }
+      })
+
+      return { approved: false, approvalId }
+    } catch (error) {
+      console.error('Failed to handle approval gate:', error)
+      return { approved: false }
+    }
+  }
+
+  /**
+   * Start the queue processor for background execution
+   */
+  private startQueueProcessor(): void {
+    setInterval(async () => {
+      if (this.isProcessingQueue || this.agentExecutionQueue.length === 0) {
+        return
+      }
+
+      this.isProcessingQueue = true
+
+      try {
+        // Process up to maxConcurrentExecutions items
+        const itemsToProcess = this.agentExecutionQueue
+          .filter(item => item.status === 'queued')
+          .slice(0, this.orchestrationConfig.maxConcurrentExecutions)
+
+        for (const item of itemsToProcess) {
+          item.status = 'running'
+          
+          try {
+            const result = await this.executeAgent(item.context)
+            
+            // Update queue item
+            item.status = result.status === 'completed' ? 'completed' : 'failed'
+            
+            // Log completion
+            await this.logAuditEvent({
+              user_id: item.context.userId,
+              agent_id: item.context.agentId,
+              execution_id: item.executionId,
+              event_type: 'execution_completed',
+              event_category: 'orchestration',
+              event_data: { status: result.status, fromQueue: true }
+            })
+          } catch (error) {
+            item.status = 'failed'
+            item.retryCount++
+            
+            // Retry if within limits
+            if (item.retryCount < item.maxRetries) {
+              const delay = Math.min(
+                this.orchestrationConfig.retryPolicy.maxBackoffDelay,
+                Math.pow(this.orchestrationConfig.retryPolicy.backoffMultiplier, item.retryCount) * 1000
+              )
+              
+              item.status = 'queued'
+              item.scheduledAt = new Date(Date.now() + delay).toISOString()
+            }
+          }
+        }
+
+        // Remove completed/failed items
+        this.agentExecutionQueue = this.agentExecutionQueue.filter(
+          item => item.status === 'queued' || item.status === 'running'
+        )
+      } finally {
+        this.isProcessingQueue = false
+      }
+    }, 1000) // Check every second
   }
 
   /**
