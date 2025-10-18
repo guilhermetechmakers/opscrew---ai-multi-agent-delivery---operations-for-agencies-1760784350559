@@ -88,7 +88,7 @@ export default function IntakeChatEnhanced() {
   const createMessageMutation = useCreateIntakeMessage()
   const updateMessageMutation = useUpdateIntakeMessage()
   const upsertQualificationMutation = useUpsertIntakeQualification()
-  const createProposalMutation = useCreateIntakeProposal()
+  const createProposalMutation = useCreateProposal()
   const generateAIResponseMutation = useGenerateAIResponse()
   const analyzeConversationMutation = useAnalyzeConversation()
 
