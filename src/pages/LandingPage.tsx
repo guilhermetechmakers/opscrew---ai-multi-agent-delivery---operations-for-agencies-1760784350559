@@ -204,12 +204,51 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background overflow-hidden">
       {/* Hero Section with Animated Gradients */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated Background */}
+        {/* Enhanced Animated Background */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/20 animate-pulse"></div>
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-bounce" style={{ animationDuration: '6s' }}></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-bounce" style={{ animationDuration: '8s', animationDelay: '2s' }}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/5 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s' }}></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/20"></div>
+          {/* Floating geometric shapes */}
+          <motion.div 
+            className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
+            animate={{ 
+              y: [0, -20, 0],
+              x: [0, 10, 0],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ 
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div 
+            className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl"
+            animate={{ 
+              y: [0, 20, 0],
+              x: [0, -10, 0],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ 
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 2
+            }}
+          />
+          <motion.div 
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/5 rounded-full blur-2xl"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.6, 0.3]
+            }}
+            transition={{ 
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          {/* Grid pattern overlay */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 z-10">
@@ -237,10 +276,22 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
             >
-              <span className="block">AI-Powered Operations</span>
-              <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse">
+              <motion.span 
+                className="block"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+              >
+                AI-Powered Operations
+              </motion.span>
+              <motion.span 
+                className="block gradient-text-animated"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.7 }}
+              >
                 for Modern Agencies
-              </span>
+              </motion.span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -261,18 +312,33 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              <Button asChild size="lg" className="btn-primary text-lg px-8 py-6 h-14 group">
-                <Link to="/dashboard/intake" className="flex items-center gap-2">
-                  Start Intake
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-14 group border-primary/30 hover:border-primary/50">
-                <Link to="/contact" className="flex items-center gap-2">
-                  <Play className="w-5 h-5" />
-                  Book Demo
-                </Link>
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button asChild size="lg" className="btn-primary text-lg px-8 py-6 h-14 group pulse-glow">
+                  <Link to="/dashboard/intake" className="flex items-center gap-2">
+                    Start Intake
+                    <motion.div
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <ArrowRight className="w-5 h-5" />
+                    </motion.div>
+                  </Link>
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-14 group border-primary/30 hover:border-primary/50 hover:bg-primary/5">
+                  <Link to="/contact" className="flex items-center gap-2">
+                    <Play className="w-5 h-5" />
+                    Book Demo
+                  </Link>
+                </Button>
+              </motion.div>
             </motion.div>
 
             {/* Stats */}
@@ -282,18 +348,51 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.9 }}
             >
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">40+</div>
+              <motion.div 
+                className="text-center"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <motion.div 
+                  className="text-3xl md:text-4xl font-bold text-primary mb-2"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.5, delay: 1.2, type: "spring", stiffness: 200 }}
+                >
+                  40+
+                </motion.div>
                 <div className="text-muted-foreground">Hours Saved Per Week</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">60%</div>
+              </motion.div>
+              <motion.div 
+                className="text-center"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <motion.div 
+                  className="text-3xl md:text-4xl font-bold text-primary mb-2"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.5, delay: 1.4, type: "spring", stiffness: 200 }}
+                >
+                  60%
+                </motion.div>
                 <div className="text-muted-foreground">Faster Project Setup</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">24/7</div>
+              </motion.div>
+              <motion.div 
+                className="text-center"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <motion.div 
+                  className="text-3xl md:text-4xl font-bold text-primary mb-2"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.5, delay: 1.6, type: "spring", stiffness: 200 }}
+                >
+                  24/7
+                </motion.div>
                 <div className="text-muted-foreground">AI Agent Availability</div>
-              </div>
+              </motion.div>
             </motion.div>
           </motion.div>
         </div>
@@ -353,15 +452,18 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -8, scale: 1.02 }}
+                whileHover={{ y: -12, scale: 1.03 }}
                 className="group"
               >
-                <Card className={`relative overflow-hidden border-2 ${feature.borderColor} hover:border-primary/50 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-primary/10`}>
-                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                <Card className={`relative overflow-hidden border-2 ${feature.borderColor} hover:border-primary/50 transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/20 card-hover`}>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
                   <CardHeader className="relative z-10">
-                    <div className={`w-14 h-14 bg-gradient-to-br ${feature.gradient} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <motion.div 
+                      className={`w-14 h-14 bg-gradient-to-br ${feature.gradient} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
+                      whileHover={{ rotate: 5 }}
+                    >
                       <feature.icon className="w-7 h-7 text-foreground" />
-                    </div>
+                    </motion.div>
                     <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors duration-300">
                       {feature.title}
                     </CardTitle>
@@ -371,9 +473,12 @@ export default function LandingPage() {
                       {feature.description}
                     </CardDescription>
                   </CardContent>
-                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <motion.div 
+                    className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    whileHover={{ x: 4 }}
+                  >
                     <ChevronRight className="w-5 h-5 text-primary" />
-                  </div>
+                  </motion.div>
                 </Card>
               </motion.div>
             ))}
@@ -416,19 +521,28 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.2 }}
                   viewport={{ once: true }}
-                  whileHover={{ y: -8 }}
+                  whileHover={{ y: -12, scale: 1.02 }}
                 >
                   {/* Step Number Circle */}
                   <div className="relative mb-8">
-                    <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 border-2 border-primary/30 group-hover:border-primary/50">
-                      <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-xl group-hover:scale-105 transition-transform duration-300">
+                    <motion.div 
+                      className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 border-2 border-primary/30 group-hover:border-primary/50"
+                      whileHover={{ rotate: 5 }}
+                    >
+                      <motion.div 
+                        className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-xl group-hover:scale-105 transition-transform duration-300"
+                        whileHover={{ rotate: -5 }}
+                      >
                         {step.step}
-                      </div>
-                    </div>
+                      </motion.div>
+                    </motion.div>
                     {/* Icon */}
-                    <div className="absolute -top-2 -right-2 w-12 h-12 bg-card border-2 border-border rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <motion.div 
+                      className="absolute -top-2 -right-2 w-12 h-12 bg-card border-2 border-border rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                      whileHover={{ rotate: 10 }}
+                    >
                       <step.icon className={`w-6 h-6 ${step.color}`} />
-                    </div>
+                    </motion.div>
                   </div>
                   
                   <h3 className="text-xl font-bold mb-4 group-hover:text-primary transition-colors duration-300">
@@ -440,9 +554,13 @@ export default function LandingPage() {
                   
                   {/* Arrow for mobile */}
                   {index < workflowSteps.length - 1 && (
-                    <div className="lg:hidden flex justify-center mt-8">
+                    <motion.div 
+                      className="lg:hidden flex justify-center mt-8"
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
                       <ChevronRight className="w-6 h-6 text-primary/50" />
-                    </div>
+                    </motion.div>
                   )}
                 </motion.div>
               ))}
@@ -513,18 +631,30 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -8, scale: 1.02 }}
+                whileHover={{ y: -12, scale: 1.03 }}
                 className="group"
               >
-                <Card className="relative overflow-hidden border-2 border-border/30 hover:border-primary/30 transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-primary/5">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                <Card className="relative overflow-hidden border-2 border-border/30 hover:border-primary/30 transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/10 card-hover">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${testimonial.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
                   <CardContent className="pt-8 relative z-10">
                     {/* Stars */}
-                    <div className="flex items-center mb-6">
+                    <motion.div 
+                      className="flex items-center mb-6"
+                      initial={{ opacity: 0, scale: 0 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                    >
                       {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 + 0.5 + i * 0.1 }}
+                        >
+                          <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                        </motion.div>
                       ))}
-                    </div>
+                    </motion.div>
                     
                     {/* Quote */}
                     <blockquote className="text-lg leading-relaxed mb-6 text-foreground/90">
@@ -532,16 +662,22 @@ export default function LandingPage() {
                     </blockquote>
                     
                     {/* Author */}
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 bg-gradient-to-br ${testimonial.gradient} rounded-full flex items-center justify-center text-white font-bold text-lg`}>
+                    <motion.div 
+                      className="flex items-center gap-4"
+                      whileHover={{ x: 4 }}
+                    >
+                      <motion.div 
+                        className={`w-12 h-12 bg-gradient-to-br ${testimonial.gradient} rounded-full flex items-center justify-center text-white font-bold text-lg`}
+                        whileHover={{ rotate: 5, scale: 1.1 }}
+                      >
                         {testimonial.avatar}
-                      </div>
+                      </motion.div>
                       <div>
                         <p className="font-semibold text-foreground">{testimonial.name}</p>
                         <p className="text-muted-foreground text-sm">{testimonial.role}</p>
                         <p className="text-primary text-sm font-medium">{testimonial.company}</p>
                       </div>
-                    </div>
+                    </motion.div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -579,51 +715,79 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -8, scale: 1.02 }}
+                whileHover={{ y: -12, scale: 1.03 }}
                 className={`relative group ${plan.popular ? 'md:-mt-8' : ''}`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className="bg-primary text-primary-foreground px-4 py-1">
+                  <motion.div 
+                    className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10"
+                    initial={{ opacity: 0, y: -20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                  >
+                    <Badge className="bg-primary text-primary-foreground px-4 py-1 pulse-glow">
                       Most Popular
                     </Badge>
-                  </div>
+                  </motion.div>
                 )}
-                <Card className={`relative overflow-hidden border-2 transition-all duration-300 ${
+                <Card className={`relative overflow-hidden border-2 transition-all duration-500 ${
                   plan.popular 
                     ? 'border-primary/50 shadow-2xl shadow-primary/10' 
                     : 'border-border/30 hover:border-primary/30'
-                } group-hover:shadow-2xl group-hover:shadow-primary/5`}>
+                } group-hover:shadow-2xl group-hover:shadow-primary/10 card-hover`}>
                   <CardHeader className="text-center pb-4">
-                    <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                    <div className="mt-4">
+                    <CardTitle className="text-2xl font-bold group-hover:text-primary transition-colors duration-300">{plan.name}</CardTitle>
+                    <motion.div 
+                      className="mt-4"
+                      whileHover={{ scale: 1.05 }}
+                    >
                       <span className="text-4xl font-bold text-foreground">{plan.price}</span>
                       <span className="text-muted-foreground">{plan.period}</span>
-                    </div>
+                    </motion.div>
                     <p className="text-muted-foreground mt-2">{plan.description}</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <ul className="space-y-4">
                       {plan.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-center gap-3">
-                          <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                        <motion.li 
+                          key={featureIndex} 
+                          className="flex items-center gap-3"
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 + featureIndex * 0.05 }}
+                        >
+                          <motion.div
+                            whileHover={{ scale: 1.2, rotate: 5 }}
+                          >
+                            <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                          </motion.div>
                           <span className="text-sm">{feature}</span>
-                        </li>
+                        </motion.li>
                       ))}
                     </ul>
-                    <Button 
-                      asChild 
-                      className={`w-full h-12 text-lg ${
-                        plan.popular 
-                          ? 'btn-primary' 
-                          : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
-                      }`}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      <Link to={plan.cta === "Contact Sales" ? "/contact" : "/pricing"}>
-                        {plan.cta}
-                        <ArrowRight className="w-5 h-5 ml-2" />
-                      </Link>
-                    </Button>
+                      <Button 
+                        asChild 
+                        className={`w-full h-12 text-lg ${
+                          plan.popular 
+                            ? 'btn-primary' 
+                            : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                        }`}
+                      >
+                        <Link to={plan.cta === "Contact Sales" ? "/contact" : "/pricing"}>
+                          {plan.cta}
+                          <motion.div
+                            animate={{ x: [0, 4, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            <ArrowRight className="w-5 h-5 ml-2" />
+                          </motion.div>
+                        </Link>
+                      </Button>
+                    </motion.div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -667,38 +831,62 @@ export default function LandingPage() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
-              <Button asChild size="lg" className="btn-primary text-lg px-8 py-6 h-14 group">
-                <Link to="/dashboard/intake" className="flex items-center gap-2">
-                  Start Intake
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-14 group border-primary/30 hover:border-primary/50">
-                <Link to="/contact" className="flex items-center gap-2">
-                  <Play className="w-5 h-5" />
-                  Book Demo
-                </Link>
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button asChild size="lg" className="btn-primary text-lg px-8 py-6 h-14 group pulse-glow">
+                  <Link to="/dashboard/intake" className="flex items-center gap-2">
+                    Start Intake
+                    <motion.div
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <ArrowRight className="w-5 h-5" />
+                    </motion.div>
+                  </Link>
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-14 group border-primary/30 hover:border-primary/50 hover:bg-primary/5">
+                  <Link to="/contact" className="flex items-center gap-2">
+                    <Play className="w-5 h-5" />
+                    Book Demo
+                  </Link>
+                </Button>
+              </motion.div>
             </div>
 
             {/* Trust Indicators */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-2">500+</div>
-                <div className="text-sm text-muted-foreground">Agencies</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-2">10K+</div>
-                <div className="text-sm text-muted-foreground">Projects Delivered</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-2">99.9%</div>
-                <div className="text-sm text-muted-foreground">Uptime</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-2">24/7</div>
-                <div className="text-sm text-muted-foreground">Support</div>
-              </div>
+              {[
+                { value: "500+", label: "Agencies" },
+                { value: "10K+", label: "Projects Delivered" },
+                { value: "99.9%", label: "Uptime" },
+                { value: "24/7", label: "Support" }
+              ].map((stat, index) => (
+                <motion.div 
+                  key={index}
+                  className="text-center"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <motion.div 
+                    className="text-2xl font-bold text-primary mb-2"
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 + 0.3, type: "spring", stiffness: 200 }}
+                  >
+                    {stat.value}
+                  </motion.div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         </div>
@@ -722,15 +910,21 @@ export default function LandingPage() {
                 and delivery for modern agencies.
               </p>
               <div className="flex gap-4">
-                <Button variant="outline" size="icon" className="border-border/30 hover:border-primary/50">
-                  <Twitter className="w-5 h-5" />
-                </Button>
-                <Button variant="outline" size="icon" className="border-border/30 hover:border-primary/50">
-                  <Linkedin className="w-5 h-5" />
-                </Button>
-                <Button variant="outline" size="icon" className="border-border/30 hover:border-primary/50">
-                  <Github className="w-5 h-5" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.9 }}>
+                  <Button variant="outline" size="icon" className="border-border/30 hover:border-primary/50">
+                    <Twitter className="w-5 h-5" />
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.9 }}>
+                  <Button variant="outline" size="icon" className="border-border/30 hover:border-primary/50">
+                    <Linkedin className="w-5 h-5" />
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.9 }}>
+                  <Button variant="outline" size="icon" className="border-border/30 hover:border-primary/50">
+                    <Github className="w-5 h-5" />
+                  </Button>
+                </motion.div>
               </div>
             </div>
             
