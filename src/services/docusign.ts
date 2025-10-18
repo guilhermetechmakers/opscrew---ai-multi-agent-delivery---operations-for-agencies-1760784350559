@@ -131,6 +131,10 @@ export class DocuSignService {
       return this.accessToken
     }
 
+    if (!this.validateConfig()) {
+      throw new Error('DocuSign configuration is incomplete. Please check your environment variables.')
+    }
+
     try {
       // In a real implementation, you would use a JWT library to create the assertion
       // For now, we'll use a mock implementation
@@ -142,7 +146,8 @@ export class DocuSignService {
       }, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
-        }
+        },
+        timeout: 10000 // 10 second timeout
       })
 
       this.accessToken = response.data.access_token
@@ -150,8 +155,7 @@ export class DocuSignService {
 
       return this.accessToken
     } catch (error) {
-      console.error('Failed to get DocuSign access token:', error)
-      throw new Error('Failed to authenticate with DocuSign')
+      this.handleApiError(error, 'authentication')
     }
   }
 
@@ -183,6 +187,37 @@ export class DocuSignService {
   }
 
   /**
+   * Validate DocuSign configuration
+   */
+  private validateConfig(): boolean {
+    return !!(
+      this.config.baseUrl &&
+      this.config.integratorKey &&
+      this.config.userId &&
+      this.config.privateKey
+    )
+  }
+
+  /**
+   * Handle DocuSign API errors
+   */
+  private handleApiError(error: any, operation: string): never {
+    let errorMessage = `DocuSign ${operation} failed`
+    
+    if (error.response) {
+      const { status, data } = error.response
+      errorMessage = `DocuSign API Error (${status}): ${data?.errorMessage || data?.message || 'Unknown error'}`
+    } else if (error.request) {
+      errorMessage = `DocuSign API Error: Network request failed - ${error.message}`
+    } else {
+      errorMessage = `DocuSign ${operation} Error: ${error.message}`
+    }
+
+    console.error(`DocuSign ${operation} error:`, error)
+    throw new Error(errorMessage)
+  }
+
+  /**
    * Create an envelope for a proposal
    */
   async createEnvelope(
@@ -191,6 +226,14 @@ export class DocuSignService {
     documentContent: string
   ): Promise<DocuSignEnvelope> {
     try {
+      if (!signers || signers.length === 0) {
+        throw new Error('At least one signer is required')
+      }
+
+      if (!documentContent) {
+        throw new Error('Document content is required')
+      }
+
       const envelope = {
         emailSubject: `Please sign: ${proposal.title}`,
         emailBlurb: `Please review and sign the proposal for ${proposal.client_name}`,
@@ -211,14 +254,24 @@ export class DocuSignService {
             clientUserId: signer.role || 'signer'
           }))
         },
+        customFields: {
+          textCustomFields: [
+            {
+              name: 'proposal_id',
+              value: proposal.id
+            }
+          ]
+        },
         status: 'sent'
       }
 
-      const response = await this.client.post('/restapi/v2.1/accounts/{accountId}/envelopes', envelope)
+      const response = await this.client.post('/restapi/v2.1/accounts/{accountId}/envelopes', envelope, {
+        timeout: 30000 // 30 second timeout for envelope creation
+      })
+      
       return response.data
     } catch (error) {
-      console.error('Failed to create DocuSign envelope:', error)
-      throw new Error('Failed to create DocuSign envelope')
+      this.handleApiError(error, 'envelope creation')
     }
   }
 
@@ -227,13 +280,19 @@ export class DocuSignService {
    */
   async sendEnvelope(envelopeId: string): Promise<DocuSignEnvelope> {
     try {
+      if (!envelopeId) {
+        throw new Error('Envelope ID is required')
+      }
+
       const response = await this.client.put(`/restapi/v2.1/accounts/{accountId}/envelopes/${envelopeId}`, {
         status: 'sent'
+      }, {
+        timeout: 15000 // 15 second timeout
       })
+      
       return response.data
     } catch (error) {
-      console.error('Failed to send DocuSign envelope:', error)
-      throw new Error('Failed to send DocuSign envelope')
+      this.handleApiError(error, 'envelope sending')
     }
   }
 
@@ -242,11 +301,17 @@ export class DocuSignService {
    */
   async getEnvelopeStatus(envelopeId: string): Promise<DocuSignEnvelope> {
     try {
-      const response = await this.client.get(`/restapi/v2.1/accounts/{accountId}/envelopes/${envelopeId}`)
+      if (!envelopeId) {
+        throw new Error('Envelope ID is required')
+      }
+
+      const response = await this.client.get(`/restapi/v2.1/accounts/{accountId}/envelopes/${envelopeId}`, {
+        timeout: 10000 // 10 second timeout
+      })
+      
       return response.data
     } catch (error) {
-      console.error('Failed to get DocuSign envelope status:', error)
-      throw new Error('Failed to get DocuSign envelope status')
+      this.handleApiError(error, 'envelope status retrieval')
     }
   }
 
@@ -255,11 +320,17 @@ export class DocuSignService {
    */
   async getEnvelopeDocuments(envelopeId: string): Promise<Array<{ documentId: string; name: string; uri: string }>> {
     try {
-      const response = await this.client.get(`/restapi/v2.1/accounts/{accountId}/envelopes/${envelopeId}/documents`)
-      return response.data.envelopeDocuments
+      if (!envelopeId) {
+        throw new Error('Envelope ID is required')
+      }
+
+      const response = await this.client.get(`/restapi/v2.1/accounts/{accountId}/envelopes/${envelopeId}/documents`, {
+        timeout: 15000 // 15 second timeout
+      })
+      
+      return response.data.envelopeDocuments || []
     } catch (error) {
-      console.error('Failed to get DocuSign envelope documents:', error)
-      throw new Error('Failed to get DocuSign envelope documents')
+      this.handleApiError(error, 'envelope documents retrieval')
     }
   }
 
@@ -275,8 +346,16 @@ export class DocuSignService {
     }>
   }> {
     try {
+      if (!event || !event.data) {
+        throw new Error('Invalid webhook event data')
+      }
+
       const { envelopeId, data } = event
       const { envelopeSummary } = data
+
+      if (!envelopeId || !envelopeSummary) {
+        throw new Error('Missing envelope ID or summary in webhook event')
+      }
 
       // Extract proposal ID from envelope metadata or custom fields
       const proposalId = envelopeSummary.customFields?.textCustomFields?.find(
@@ -294,7 +373,8 @@ export class DocuSignService {
         'voided': 'expired',
         'sent': 'pending',
         'delivered': 'pending',
-        'signed': 'signed'
+        'signed': 'signed',
+        'expired': 'expired'
       }
 
       const signatureUpdates = envelopeSummary.recipients?.signers?.map((signer: any) => ({
@@ -309,7 +389,7 @@ export class DocuSignService {
       }
     } catch (error) {
       console.error('Failed to process DocuSign webhook event:', error)
-      throw new Error('Failed to process DocuSign webhook event')
+      throw new Error(`Failed to process DocuSign webhook event: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -322,17 +402,27 @@ export class DocuSignService {
     returnUrl: string
   ): Promise<{ url: string }> {
     try {
+      if (!envelopeId || !recipientId || !returnUrl) {
+        throw new Error('Envelope ID, recipient ID, and return URL are required')
+      }
+
       const response = await this.client.post(`/restapi/v2.1/accounts/{accountId}/envelopes/${envelopeId}/views/recipient`, {
         authenticationMethod: 'none',
         email: '',
         userName: '',
         recipientId,
         returnUrl
+      }, {
+        timeout: 15000 // 15 second timeout
       })
+      
+      if (!response.data?.url) {
+        throw new Error('No signing URL returned from DocuSign')
+      }
+
       return { url: response.data.url }
     } catch (error) {
-      console.error('Failed to get DocuSign recipient view:', error)
-      throw new Error('Failed to get DocuSign recipient view')
+      this.handleApiError(error, 'recipient view generation')
     }
   }
 
@@ -341,14 +431,24 @@ export class DocuSignService {
    */
   async voidEnvelope(envelopeId: string, reason: string): Promise<DocuSignEnvelope> {
     try {
+      if (!envelopeId) {
+        throw new Error('Envelope ID is required')
+      }
+
+      if (!reason || reason.trim().length === 0) {
+        throw new Error('Void reason is required')
+      }
+
       const response = await this.client.put(`/restapi/v2.1/accounts/{accountId}/envelopes/${envelopeId}`, {
         status: 'voided',
-        voidedReason: reason
+        voidedReason: reason.trim()
+      }, {
+        timeout: 15000 // 15 second timeout
       })
+      
       return response.data
     } catch (error) {
-      console.error('Failed to void DocuSign envelope:', error)
-      throw new Error('Failed to void DocuSign envelope')
+      this.handleApiError(error, 'envelope voiding')
     }
   }
 }

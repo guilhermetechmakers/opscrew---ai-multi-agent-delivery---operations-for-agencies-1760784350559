@@ -24,6 +24,7 @@ import AgentExecutions from "@/pages/AgentExecutions";
 import MeetingSummary from "@/pages/MeetingSummary";
 import ClientPortal from "@/pages/ClientPortal";
 import AuthTest from "@/pages/AuthTest";
+import { EsignatureDemo } from "@/pages/EsignatureDemo";
 import NotFound from "@/pages/NotFound";
 
 // React Query client with optimal defaults
@@ -109,7 +110,10 @@ export default function App() {
             
             {/* Development Routes */}
             {import.meta.env.DEV && (
-              <Route path="/auth-test" element={<AuthTest />} />
+              <>
+                <Route path="/auth-test" element={<AuthTest />} />
+                <Route path="/esignature-demo" element={<EsignatureDemo />} />
+              </>
             )}
             
             {/* 404 route */}
