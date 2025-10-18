@@ -1,68 +1,186 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+/* OpsCrew Design System with CSS Custom Properties */
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    /* OpsCrew Color Palette - Dark Theme */
+    --background: 24 27 27; /* #181A1B */
+    --foreground: 255 255 255; /* #FFFFFF */
+    
+    --card: 34 36 38; /* #222426 */
+    --card-foreground: 255 255 255; /* #FFFFFF */
+    
+    --popover: 34 36 38; /* #222426 */
+    --popover-foreground: 255 255 255; /* #FFFFFF */
+    
+    --primary: 83 183 255; /* #53B7FF */
+    --primary-foreground: 24 27 27; /* #181A1B */
+    
+    --secondary: 38 40 42; /* #26282A */
+    --secondary-foreground: 163 167 172; /* #A3A7AC */
+    
+    --muted: 38 40 42; /* #26282A */
+    --muted-foreground: 163 167 172; /* #A3A7AC */
+    
+    --accent: 83 183 255; /* #53B7FF */
+    --accent-foreground: 24 27 27; /* #181A1B */
+    
+    --destructive: 255 119 132; /* #FF7784 */
+    --destructive-foreground: 24 27 27; /* #181A1B */
+    
+    --border: 38 40 42; /* #26282A */
+    --input: 38 40 42; /* #26282A */
+    --ring: 83 183 255; /* #53B7FF */
+    
+    --radius: 0.5rem; /* 8px */
   }
-  a:hover {
-    color: #747bff;
+  
+  .dark {
+    /* Dark mode is the default, but keeping for consistency */
+    --background: 24 27 27; /* #181A1B */
+    --foreground: 255 255 255; /* #FFFFFF */
+    
+    --card: 34 36 38; /* #222426 */
+    --card-foreground: 255 255 255; /* #FFFFFF */
+    
+    --popover: 34 36 38; /* #222426 */
+    --popover-foreground: 255 255 255; /* #FFFFFF */
+    
+    --primary: 83 183 255; /* #53B7FF */
+    --primary-foreground: 24 27 27; /* #181A1B */
+    
+    --secondary: 38 40 42; /* #26282A */
+    --secondary-foreground: 163 167 172; /* #A3A7AC */
+    
+    --muted: 38 40 42; /* #26282A */
+    --muted-foreground: 163 167 172; /* #A3A7AC */
+    
+    --accent: 83 183 255; /* #53B7FF */
+    --accent-foreground: 24 27 27; /* #181A1B */
+    
+    --destructive: 255 119 132; /* #FF7784 */
+    --destructive-foreground: 24 27 27; /* #181A1B */
+    
+    --border: 38 40 42; /* #26282A */
+    --input: 38 40 42; /* #26282A */
+    --ring: 83 183 255; /* #53B7FF */
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+@layer base {
+  * {
+    @apply border-border;
   }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Typography hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.2;
+    color: hsl(var(--foreground));
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+  }
+  
+  h2 {
+    font-size: 2rem;
+    font-weight: 600;
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  
+  h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  
+  h5 {
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+  
+  h6 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+@layer components {
+  /* Custom component styles for OpsCrew */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 hover:scale-105 hover:shadow-lg;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all duration-200 hover:scale-105;
+  }
+  
+  .card-hover {
+    @apply hover:bg-card/80 transition-all duration-200 hover:shadow-lg;
+  }
+  
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200;
+  }
+  
+  .sidebar-item-active {
+    @apply bg-secondary text-foreground border-l-4 border-primary;
+  }
+}
+
+/* Smooth Scrolling */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom Animations */
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+/* Focus Visible for Accessibility */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent));
 }
