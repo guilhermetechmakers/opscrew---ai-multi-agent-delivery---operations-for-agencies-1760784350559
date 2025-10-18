@@ -40,9 +40,22 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="intake" element={<IntakeChat />} />
             <Route path="projects" element={<ProjectBoard />} />
+            <Route path="projects/provision" element={<ProjectBoard />} />
             <Route path="meetings" element={<MeetingSummary />} />
             <Route path="agents" element={<AgentManagement />} />
             <Route path="executions" element={<AgentExecutions />} />
+            <Route path="audit" element={<AgentExecutions />} />
+            <Route path="profile" element={<AgentExecutions />} />
+            <Route path="settings" element={<AgentExecutions />} />
+            <Route path="help" element={<AgentExecutions />} />
+          </Route>
+          
+          {/* Client Portal Routes */}
+          <Route path="/portal" element={<DashboardLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="techstart" element={<Dashboard />} />
+            <Route path="ecommerce" element={<Dashboard />} />
+            <Route path="mobile" element={<Dashboard />} />
           </Route>
           
           {/* 404 route */}
