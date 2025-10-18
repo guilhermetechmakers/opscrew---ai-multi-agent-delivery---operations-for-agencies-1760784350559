@@ -16,8 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useSignOut } from "@/hooks/useAuthQueries";
 
 export function TopNav() {
+  const { user, profile } = useAuth();
+  const signOutMutation = useSignOut();
   const [searchQuery, setSearchQuery] = useState("");
   const [notifications] = useState([
     { id: 1, title: "New proposal generated", time: "2 min ago", unread: true },
@@ -26,6 +30,28 @@ export function TopNav() {
   ]);
 
   const unreadCount = notifications.filter(n => n.unread).length;
+
+  const handleSignOut = async () => {
+    try {
+      await signOutMutation.mutateAsync();
+    } catch (error) {
+      // Error is handled by the mutation
+    }
+  };
+
+  const getUserDisplayName = () => {
+    if (profile?.display_name) return profile.display_name;
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name} ${profile.last_name}`;
+    }
+    if (profile?.first_name) return profile.first_name;
+    return user?.email?.split('@')[0] || 'User';
+  };
+
+  const getUserInitials = () => {
+    const name = getUserDisplayName();
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
 
   const quickActions = [
     { title: "Start Intake", icon: MessageSquare, href: "/dashboard/intake" },
@@ -144,18 +170,26 @@ export function TopNav() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 rounded-full hover:bg-secondary/80 transition-colors">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/avatars/01.png" alt="User" />
-                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">JD</AvatarFallback>
+                  <AvatarImage src={profile?.avatar_url || ""} alt={getUserDisplayName()} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                    {getUserInitials()}
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">John Doe</p>
+                  <p className="text-sm font-medium leading-none">{getUserDisplayName()}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    john@example.com
+                    {user?.email}
                   </p>
+                  {profile?.two_factor_enabled && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Shield className="w-3 h-3 text-green-500" />
+                      <span className="text-xs text-green-500">2FA Enabled</span>
+                    </div>
+                  )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -170,6 +204,12 @@ export function TopNav() {
                   <Link to="/dashboard/settings" className="flex items-center gap-3">
                     <Settings className="w-4 h-4" />
                     <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/setup-2fa" className="flex items-center gap-3">
+                    <Shield className="w-4 h-4" />
+                    <span>Security & 2FA</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -196,9 +236,13 @@ export function TopNav() {
                 </DropdownMenuCheckboxItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive">
+              <DropdownMenuItem 
+                className="text-destructive focus:text-destructive"
+                onClick={handleSignOut}
+                disabled={signOutMutation.isPending}
+              >
                 <LogOut className="w-4 h-4 mr-2" />
-                <span>Log out</span>
+                <span>{signOutMutation.isPending ? "Signing out..." : "Log out"}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

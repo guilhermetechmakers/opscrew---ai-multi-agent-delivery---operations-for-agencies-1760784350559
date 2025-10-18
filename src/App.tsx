@@ -2,12 +2,15 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
 import EmailVerification from "@/pages/EmailVerification";
 import PasswordReset from "@/pages/PasswordReset";
 import ForgotPassword from "@/pages/ForgotPassword";
+import Setup2FA from "@/pages/Setup2FA";
+import SessionManagement from "@/pages/SessionManagement";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
 import IntakeChat from "@/pages/IntakeChat";
@@ -46,7 +49,11 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* Protected routes with dashboard layout */}
-            <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }>
               <Route index element={<Dashboard />} />
               <Route path="intake" element={<IntakeChat />} />
               <Route path="projects" element={<ProjectBoard />} />
@@ -59,6 +66,20 @@ export default function App() {
               <Route path="settings" element={<AgentExecutions />} />
               <Route path="help" element={<AgentExecutions />} />
             </Route>
+            
+            {/* 2FA Setup Route */}
+            <Route path="/setup-2fa" element={
+              <ProtectedRoute>
+                <Setup2FA />
+              </ProtectedRoute>
+            } />
+            
+            {/* Session Management Route */}
+            <Route path="/sessions" element={
+              <ProtectedRoute>
+                <SessionManagement />
+              </ProtectedRoute>
+            } />
             
             {/* Client Portal Routes */}
             <Route path="/portal/:projectId" element={<ClientPortal />} />
