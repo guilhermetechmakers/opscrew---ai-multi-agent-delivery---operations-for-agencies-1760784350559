@@ -107,31 +107,31 @@ import { cn } from "@/lib/utils";
 
 // Status color mappings following OpsCrew design system
 const statusColors = {
-  completed: "text-emerald-500",
-  running: "text-blue-500", 
-  failed: "text-red-500",
-  awaiting_approval: "text-yellow-500",
-  planning: "text-purple-500",
-  active: "text-green-500",
-  on_hold: "text-orange-500",
-  cancelled: "text-gray-500"
+  completed: "text-green",
+  running: "text-primary", 
+  failed: "text-destructive",
+  awaiting_approval: "text-yellow",
+  planning: "text-lavender",
+  active: "text-green",
+  on_hold: "text-yellow",
+  cancelled: "text-muted-foreground"
 };
 
 const priorityColors = {
-  low: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
-  medium: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", 
-  high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  urgent: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+  low: "bg-muted text-muted-foreground",
+  medium: "bg-primary/10 text-primary", 
+  high: "bg-yellow/10 text-yellow",
+  urgent: "bg-destructive/10 text-destructive"
 };
 
 const agentColors = {
-  intake: "from-blue-500 to-blue-600",
-  pm: "from-emerald-500 to-emerald-600", 
-  comms: "from-purple-500 to-purple-600",
-  research: "from-orange-500 to-orange-600",
-  launch: "from-pink-500 to-pink-600",
-  handover: "from-cyan-500 to-cyan-600",
-  support: "from-indigo-500 to-indigo-600"
+  intake: "from-primary to-primary/80",
+  pm: "from-green to-green/80", 
+  comms: "from-lavender to-lavender/80",
+  research: "from-yellow to-yellow/80",
+  launch: "from-accent to-accent/80",
+  handover: "from-primary to-primary/80",
+  support: "from-muted to-muted/80"
 };
 
 // Mock data for fallback
@@ -205,36 +205,36 @@ const quickActions = [
     description: "Begin qualifying a new lead",
     icon: MessageSquare,
     href: "/dashboard/intake",
-    color: "bg-gradient-to-br from-blue-500 to-blue-600",
-    hoverColor: "hover:from-blue-600 hover:to-blue-700",
-    gradient: "from-blue-500 to-blue-600"
+    color: "bg-gradient-to-br from-primary to-primary/80",
+    hoverColor: "hover:from-primary/90 hover:to-primary/70",
+    gradient: "from-primary to-primary/80"
   },
   {
     title: "Provision Project",
     description: "Set up repos and environments",
     icon: Rocket,
     href: "/dashboard/projects/provision",
-    color: "bg-gradient-to-br from-emerald-500 to-emerald-600",
-    hoverColor: "hover:from-emerald-600 hover:to-emerald-700",
-    gradient: "from-emerald-500 to-emerald-600"
+    color: "bg-gradient-to-br from-green to-green/80",
+    hoverColor: "hover:from-green/90 hover:to-green/70",
+    gradient: "from-green to-green/80"
   },
   {
     title: "Run Audit",
     description: "Check system health and compliance",
     icon: Shield,
     href: "/dashboard/audit",
-    color: "bg-gradient-to-br from-purple-500 to-purple-600",
-    hoverColor: "hover:from-purple-600 hover:to-purple-700",
-    gradient: "from-purple-500 to-purple-600"
+    color: "bg-gradient-to-br from-lavender to-lavender/80",
+    hoverColor: "hover:from-lavender/90 hover:to-lavender/70",
+    gradient: "from-lavender to-lavender/80"
   },
   {
     title: "Open Client Portal",
     description: "Access client-facing dashboard",
     icon: Globe,
     href: "/portal",
-    color: "bg-gradient-to-br from-orange-500 to-orange-600",
-    hoverColor: "hover:from-orange-600 hover:to-orange-700",
-    gradient: "from-orange-500 to-orange-600"
+    color: "bg-gradient-to-br from-yellow to-yellow/80",
+    hoverColor: "hover:from-yellow/90 hover:to-yellow/70",
+    gradient: "from-yellow to-yellow/80"
   }
 ];
 

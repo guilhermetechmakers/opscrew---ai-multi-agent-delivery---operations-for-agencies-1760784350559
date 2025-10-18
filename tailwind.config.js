@@ -41,6 +41,10 @@ export default {
           DEFAULT: 'hsl(var(--popover))',
           foreground: 'hsl(var(--popover-foreground))',
         },
+        // Additional accent colors from design rules
+        yellow: 'hsl(var(--yellow))',
+        green: 'hsl(var(--green))',
+        lavender: 'hsl(var(--lavender))',
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

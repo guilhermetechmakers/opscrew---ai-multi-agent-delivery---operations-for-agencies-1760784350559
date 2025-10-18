@@ -41,11 +41,17 @@ export function ThemeProvider({
         ? "dark"
         : "light";
 
-      root.classList.add(systemTheme);
+      if (systemTheme === "light") {
+        root.classList.add("light");
+      }
+      // For dark theme, we don't add any class since :root has dark colors by default
       return;
     }
 
-    root.classList.add(theme);
+    if (theme === "light") {
+      root.classList.add("light");
+    }
+    // For dark theme, we don't add any class since :root has dark colors by default
   }, [theme]);
 
   const value = {

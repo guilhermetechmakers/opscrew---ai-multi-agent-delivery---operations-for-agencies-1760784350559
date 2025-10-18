@@ -44,35 +44,35 @@ const features = [
     icon: GitBranch,
     title: "Project Spin-Up Agent",
     description: "Provisions repos, environments, task templates, and branded client portals in minutes.",
-    gradient: "from-accent/20 to-primary/20",
-    borderColor: "border-accent/30"
+    gradient: "from-green/20 to-primary/20",
+    borderColor: "border-green/30"
   },
   {
     icon: Target,
     title: "PM Agent",
     description: "Plans sprints, assigns tasks, writes acceptance criteria, and chases blockers automatically.",
-    gradient: "from-primary/20 to-accent/20",
+    gradient: "from-primary/20 to-lavender/20",
     borderColor: "border-primary/30"
   },
   {
     icon: MessageSquare,
     title: "Comms Agent",
     description: "Summarizes meetings, posts updates, and converts feedback into actionable tickets.",
-    gradient: "from-accent/20 to-primary/20",
-    borderColor: "border-accent/30"
+    gradient: "from-yellow/20 to-primary/20",
+    borderColor: "border-yellow/30"
   },
   {
     icon: Code,
     title: "Research/Copilot Agent",
     description: "Drafts specs, user stories, test plans, and PR drafts aligned with your tech stack.",
-    gradient: "from-primary/20 to-accent/20",
-    borderColor: "border-primary/30"
+    gradient: "from-lavender/20 to-accent/20",
+    borderColor: "border-lavender/30"
   },
   {
     icon: Rocket,
     title: "Launch Agent",
     description: "Runs QA/security checklists, coordinates deploys, and manages release communications.",
-    gradient: "from-accent/20 to-primary/20",
+    gradient: "from-accent/20 to-green/20",
     borderColor: "border-accent/30"
   }
 ];
@@ -90,21 +90,21 @@ const workflowSteps = [
     title: "Spin-Up",
     description: "Generate professional proposals and SoWs with automated e-signature workflows.",
     icon: FileText,
-    color: "text-accent"
+    color: "text-green"
   },
   {
     step: "03",
     title: "Delivery",
     description: "Automatically provision repos, environments, and branded client portals.",
     icon: Cloud,
-    color: "text-primary"
+    color: "text-lavender"
   },
   {
     step: "04",
     title: "Launch/Handover",
     description: "Specialized agents manage the entire delivery process with human oversight.",
     icon: Settings,
-    color: "text-accent"
+    color: "text-yellow"
   }
 ];
 
@@ -116,7 +116,7 @@ const testimonials = [
     content: "OpsCrew has revolutionized how we handle client projects. The AI agents save us 40+ hours per week and our client satisfaction has increased by 60%.",
     rating: 5,
     avatar: "SJ",
-    gradient: "from-primary to-accent"
+    gradient: "from-primary to-green"
   },
   {
     name: "Mike Chen",
@@ -125,7 +125,7 @@ const testimonials = [
     content: "The automated provisioning and project management features are game-changers. We've reduced project setup time from days to minutes.",
     rating: 5,
     avatar: "MC",
-    gradient: "from-accent to-primary"
+    gradient: "from-lavender to-primary"
   },
   {
     name: "Emily Rodriguez",
@@ -134,7 +134,7 @@ const testimonials = [
     content: "The AI agents handle all our operational overhead so we can focus on creative work. It's like having a full operations team.",
     rating: 5,
     avatar: "ER",
-    gradient: "from-primary to-accent"
+    gradient: "from-yellow to-accent"
   }
 ];
 

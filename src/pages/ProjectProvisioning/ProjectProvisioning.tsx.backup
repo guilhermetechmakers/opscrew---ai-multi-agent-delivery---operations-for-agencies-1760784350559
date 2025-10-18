@@ -26,12 +26,9 @@ import {
   Cloud,
   Monitor
 } from "lucide-react";
-import { usePublicTemplates } from '@/hooks/useProjectProvisioningTemplates';
+import { useTemplates } from '@/hooks/useProjectProvisioningTemplates';
 import { useRequests, useUpdateRequestStatus, useActiveRequests, useCreateRequest } from '@/hooks/useProjectProvisioningRequests';
 import { useLogsByRequestId } from '@/hooks/useProjectProvisioningLogs';
-import { TemplateSelectionStep } from '@/components/provisioning/TemplateSelectionStep';
-import { RepositorySetupStep } from '@/components/provisioning/RepositorySetupStep';
-import { ProvisioningLogs } from '@/components/provisioning/ProvisioningLogs';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -87,6 +84,50 @@ const WIZARD_STEPS = [
   }
 ];
 
+// Mock data for demonstration
+const mockTemplates = [
+  {
+    id: '1',
+    name: 'Next.js Full-Stack',
+    description: 'Modern React app with Next.js, TypeScript, and Tailwind CSS',
+    category: 'web',
+    tech_stack: ['Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'Prisma', 'PostgreSQL'],
+    infrastructure_provider: 'vercel',
+    usage_count: 150,
+    is_public: true
+  },
+  {
+    id: '2',
+    name: 'React Native Mobile',
+    description: 'Cross-platform mobile app with React Native and Expo',
+    category: 'mobile',
+    tech_stack: ['React Native', 'Expo', 'TypeScript', 'NativeWind', 'Supabase'],
+    infrastructure_provider: 'expo',
+    usage_count: 89,
+    is_public: true
+  },
+  {
+    id: '3',
+    name: 'Node.js API',
+    description: 'RESTful API with Express.js, TypeScript, and MongoDB',
+    category: 'api',
+    tech_stack: ['Node.js', 'Express', 'TypeScript', 'MongoDB', 'JWT', 'Swagger'],
+    infrastructure_provider: 'aws',
+    usage_count: 67,
+    is_public: true
+  },
+  {
+    id: '4',
+    name: 'AI-Powered App',
+    description: 'Application with OpenAI integration and vector database',
+    category: 'ai',
+    tech_stack: ['Next.js', 'OpenAI', 'Pinecone', 'LangChain', 'TypeScript'],
+    infrastructure_provider: 'vercel',
+    usage_count: 45,
+    is_public: true
+  }
+];
+
 interface ProvisioningFormData {
   templateId: string | null;
   projectName: string;
@@ -134,11 +175,14 @@ export default function ProjectProvisioning() {
   const [provisioningRequestId, setProvisioningRequestId] = useState<string | null>(null);
 
   // Hooks
-  const { data: templates, isLoading: templatesLoading } = usePublicTemplates();
+  const { data: templates, isLoading: templatesLoading } = useTemplates();
   const { data: activeRequests } = useActiveRequests();
   const createRequestMutation = useCreateRequest();
   const updateRequestStatusMutation = useUpdateRequestStatus();
   const { data: logs } = useLogsByRequestId(provisioningRequestId || '');
+
+  // Use mock data if API fails
+  const displayTemplates = templates || mockTemplates;
 
   // Check if there's an active provisioning request
   useEffect(() => {
@@ -252,7 +296,7 @@ export default function ProjectProvisioning() {
     switch (currentStep) {
       case 0:
         return <TemplateSelectionStep 
-          templates={templates || []} 
+          templates={displayTemplates} 
           isLoading={templatesLoading}
           selectedTemplateId={formData.templateId}
           onTemplateSelect={(templateId) => handleFormDataChange({ templateId })}
@@ -283,7 +327,6 @@ export default function ProjectProvisioning() {
           isProvisioning={isProvisioning}
           logs={logs || []}
           onStartProvisioning={handleStartProvisioning}
-          provisioningRequestId={provisioningRequestId}
         />;
       default:
         return null;
@@ -470,7 +513,103 @@ export default function ProjectProvisioning() {
   );
 }
 
-// Simplified step components for remaining steps
+// Step Components (simplified for now)
+function TemplateSelectionStep({ templates, isLoading, selectedTemplateId, onTemplateSelect }: any) {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {templates.map((template: any) => (
+          <Card 
+            key={template.id}
+            className={cn(
+              "cursor-pointer transition-all duration-200 hover:shadow-lg",
+              selectedTemplateId === template.id && "ring-2 ring-primary"
+            )}
+            onClick={() => onTemplateSelect(template.id)}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Code className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg">{template.name}</h3>
+                  <p className="text-muted-foreground text-sm mt-1">{template.description}</p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {template.tech_stack.slice(0, 3).map((tech: string) => (
+                      <Badge key={tech} variant="secondary" className="text-xs">
+                        {tech}
+                      </Badge>
+                    ))}
+                    {template.tech_stack.length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{template.tech_stack.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RepositorySetupStep({ formData, onFormDataChange }: any) {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Project Name</label>
+            <input
+              type="text"
+              value={formData.projectName}
+              onChange={(e) => onFormDataChange({ projectName: e.target.value })}
+              className="w-full mt-1 px-3 py-2 bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+              placeholder="Enter project name"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Repository Name</label>
+            <input
+              type="text"
+              value={formData.repositoryName}
+              onChange={(e) => onFormDataChange({ repositoryName: e.target.value })}
+              className="w-full mt-1 px-3 py-2 bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+              placeholder="Enter repository name"
+            />
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Repository Description</label>
+            <textarea
+              value={formData.repositoryDescription}
+              onChange={(e) => onFormDataChange({ repositoryDescription: e.target.value })}
+              className="w-full mt-1 px-3 py-2 bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+              placeholder="Enter repository description"
+              rows={3}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Branch Name</label>
+            <input
+              type="text"
+              value={formData.branchName}
+              onChange={(e) => onFormDataChange({ branchName: e.target.value })}
+              className="w-full mt-1 px-3 py-2 bg-secondary border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+              placeholder="main"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EnvironmentSecretsStep({ formData, onFormDataChange }: any) {
   return (
     <div className="space-y-6">
@@ -519,10 +658,10 @@ function ClientPortalStep({ formData, onFormDataChange }: any) {
   );
 }
 
-function ReviewDeployStep({ formData, isProvisioning, logs, onStartProvisioning, provisioningRequestId }: any) {
+function ReviewDeployStep({ formData, isProvisioning, logs, onStartProvisioning }: any) {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Configuration Summary</h3>
           <div className="space-y-2 text-sm">
@@ -544,7 +683,6 @@ function ReviewDeployStep({ formData, isProvisioning, logs, onStartProvisioning,
             </div>
           </div>
         </div>
-        
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Provisioning Status</h3>
           {isProvisioning ? (
@@ -563,11 +701,6 @@ function ReviewDeployStep({ formData, isProvisioning, logs, onStartProvisioning,
           )}
         </div>
       </div>
-
-      {/* Real-time logs */}
-      {provisioningRequestId && (
-        <ProvisioningLogs requestId={provisioningRequestId} />
-      )}
     </div>
   );
 }

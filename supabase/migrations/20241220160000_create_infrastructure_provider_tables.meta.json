@@ -1,0 +1,12 @@
+{
+  "migration_name": "20241220160000_create_infrastructure_provider_tables",
+  "created_at": "2024-12-20T16:00:00Z",
+  "description": "Create infrastructure and Git provider tables for project provisioning integrations",
+  "tables_created": ["infrastructure_providers", "git_providers", "provisioning_webhooks"],
+  "tables_modified": [],
+  "tables_deleted": [],
+  "breaking_changes": false,
+  "rollback_sql": "DROP TABLE IF EXISTS provisioning_webhooks CASCADE; DROP TABLE IF EXISTS git_providers CASCADE; DROP TABLE IF EXISTS infrastructure_providers CASCADE;",
+  "estimated_rows": 0,
+  "requires_downtime": false
+}

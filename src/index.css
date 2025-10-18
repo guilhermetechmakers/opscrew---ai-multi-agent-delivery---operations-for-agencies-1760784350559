@@ -8,6 +8,44 @@
 /* OpsCrew Design System with CSS Custom Properties */
 @layer base {
   :root {
+    /* OpsCrew Color Palette - Dark Theme (Default) - Matching Design Rules */
+    --background: 35 39 46; /* #23272E - deep charcoal gray */
+    --foreground: 255 255 255; /* #FFFFFF - high contrast white */
+    
+    --card: 42 46 53; /* #2A2E35 - card surfaces */
+    --card-foreground: 255 255 255; /* #FFFFFF */
+    
+    --popover: 42 46 53; /* #2A2E35 */
+    --popover-foreground: 255 255 255; /* #FFFFFF */
+    
+    --primary: 72 183 245; /* #48B7F5 - sky blue */
+    --primary-foreground: 255 255 255; /* #FFFFFF */
+    
+    --secondary: 25 27 31; /* #191B1F - sidebar background */
+    --secondary-foreground: 163 167 179; /* #A3A7B3 - muted gray */
+    
+    --muted: 25 27 31; /* #191B1F */
+    --muted-foreground: 107 110 124; /* #6B6E7C - disabled/placeholder */
+    
+    --accent: 72 183 245; /* #48B7F5 - sky blue */
+    --accent-foreground: 255 255 255; /* #FFFFFF */
+    
+    --destructive: 255 107 107; /* #FF6B6B - soft red */
+    --destructive-foreground: 255 255 255; /* #FFFFFF */
+    
+    --border: 53 57 69; /* #353945 - thin separators */
+    --input: 53 57 69; /* #353945 */
+    --ring: 72 183 245; /* #48B7F5 */
+    
+    /* Additional accent colors from design rules */
+    --yellow: 247 201 72; /* #F7C948 - indicators, tags */
+    --green: 47 230 166; /* #2FE6A6 - progress bars, tags */
+    --lavender: 167 147 248; /* #A793F8 - highlight */
+    
+    --radius: 0.5rem; /* 8px */
+  }
+  
+  .light {
     /* OpsCrew Color Palette - Light Theme */
     --background: 255 255 255; /* #FFFFFF */
     --foreground: 24 27 27; /* #181A1B */
@@ -18,7 +56,7 @@
     --popover: 248 250 252; /* #F8FAFC */
     --popover-foreground: 24 27 27; /* #181A1B */
     
-    --primary: 83 183 255; /* #53B7FF */
+    --primary: 72 183 245; /* #48B7F5 - sky blue */
     --primary-foreground: 255 255 255; /* #FFFFFF */
     
     --secondary: 241 245 249; /* #F1F5F9 */
@@ -27,48 +65,20 @@
     --muted: 241 245 249; /* #F1F5F9 */
     --muted-foreground: 100 116 139; /* #64748B */
     
-    --accent: 83 183 255; /* #53B7FF */
+    --accent: 72 183 245; /* #48B7F5 - sky blue */
     --accent-foreground: 255 255 255; /* #FFFFFF */
     
-    --destructive: 239 68 68; /* #EF4444 */
+    --destructive: 255 107 107; /* #FF6B6B - soft red */
     --destructive-foreground: 255 255 255; /* #FFFFFF */
     
     --border: 226 232 240; /* #E2E8F0 */
     --input: 226 232 240; /* #E2E8F0 */
-    --ring: 83 183 255; /* #53B7FF */
+    --ring: 72 183 245; /* #48B7F5 */
     
-    --radius: 0.5rem; /* 8px */
-  }
-  
-  .dark {
-    /* OpsCrew Color Palette - Dark Theme */
-    --background: 24 27 27; /* #181A1B */
-    --foreground: 255 255 255; /* #FFFFFF */
-    
-    --card: 34 36 38; /* #222426 */
-    --card-foreground: 255 255 255; /* #FFFFFF */
-    
-    --popover: 34 36 38; /* #222426 */
-    --popover-foreground: 255 255 255; /* #FFFFFF */
-    
-    --primary: 83 183 255; /* #53B7FF */
-    --primary-foreground: 24 27 27; /* #181A1B */
-    
-    --secondary: 38 40 42; /* #26282A */
-    --secondary-foreground: 163 167 172; /* #A3A7AC */
-    
-    --muted: 38 40 42; /* #26282A */
-    --muted-foreground: 163 167 172; /* #A3A7AC */
-    
-    --accent: 83 183 255; /* #53B7FF */
-    --accent-foreground: 24 27 27; /* #181A1B */
-    
-    --destructive: 255 119 132; /* #FF7784 */
-    --destructive-foreground: 24 27 27; /* #181A1B */
-    
-    --border: 38 40 42; /* #26282A */
-    --input: 38 40 42; /* #26282A */
-    --ring: 83 183 255; /* #53B7FF */
+    /* Additional accent colors for light theme */
+    --yellow: 247 201 72; /* #F7C948 - indicators, tags */
+    --green: 47 230 166; /* #2FE6A6 - progress bars, tags */
+    --lavender: 167 147 248; /* #A793F8 - highlight */
   }
 }
 
@@ -212,15 +222,15 @@
   /* Grid pattern background */
   .bg-grid-pattern {
     background-image: 
-      linear-gradient(rgba(83, 183, 255, 0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(83, 183, 255, 0.1) 1px, transparent 1px);
+      linear-gradient(rgba(72, 183, 245, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(72, 183, 245, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
   }
 
   /* Enhanced button hover effects */
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(83, 183, 255, 0.3);
+    box-shadow: 0 10px 25px -5px rgba(72, 183, 245, 0.3);
   }
 
   /* Card hover effects */
@@ -231,7 +241,7 @@
 
   /* Gradient text animation */
   .gradient-text-animated {
-    background: linear-gradient(-45deg, #53B7FF, #83B7FF, #53B7FF, #83B7FF);
+    background: linear-gradient(-45deg, #48B7F5, #72B7F5, #48B7F5, #72B7F5);
     background-size: 400% 400%;
     animation: gradientShift 3s ease infinite;
     -webkit-background-clip: text;
@@ -241,17 +251,17 @@
 
   /* Enhanced landing page animations */
   .hero-glow {
-    box-shadow: 0 0 60px rgba(83, 183, 255, 0.3);
+    box-shadow: 0 0 60px rgba(72, 183, 245, 0.3);
   }
 
   .feature-card-hover {
     transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(83, 183, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(72, 183, 245, 0.1);
   }
 
   .pricing-card-popular {
     transform: translateY(-16px) scale(1.02);
-    box-shadow: 0 25px 50px -12px rgba(83, 183, 255, 0.25);
+    box-shadow: 0 25px 50px -12px rgba(72, 183, 245, 0.25);
   }
 
   /* Floating animation for hero elements */
@@ -356,10 +366,10 @@
 
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(83, 183, 255, 0.3);
+    box-shadow: 0 0 20px rgba(72, 183, 245, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(83, 183, 255, 0.6);
+    box-shadow: 0 0 40px rgba(72, 183, 245, 0.6);
   }
 }
 

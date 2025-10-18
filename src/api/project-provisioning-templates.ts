@@ -10,14 +10,11 @@ import type {
 } from '@/types/database/project-provisioning-templates';
 
 export const projectProvisioningTemplatesApi = {
-  // Get all templates for the current user and public templates
+  // Get all templates for the current user
   async getTemplates(): Promise<ProjectProvisioningTemplate[]> {
     const { data, error } = await supabase
       .from('project_provisioning_templates')
       .select('*')
-      .or('is_public.eq.true,user_id.eq.' + (await supabase.auth.getUser()).data.user?.id)
-      .eq('status', 'active')
-      .order('usage_count', { ascending: false })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -27,18 +24,49 @@ export const projectProvisioningTemplatesApi = {
     return data || [];
   },
 
+  // Get public templates
+  async getPublicTemplates(): Promise<ProjectProvisioningTemplate[]> {
+    const { data, error } = await supabase
+      .from('project_provisioning_templates')
+      .select('*')
+      .eq('is_public', true)
+      .eq('status', 'active')
+      .order('usage_count', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch public templates: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
   // Get templates by category
-  async getTemplatesByCategory(category: string): Promise<ProjectProvisioningTemplate[]> {
+  async getTemplatesByCategory(category: ProjectProvisioningTemplate['category']): Promise<ProjectProvisioningTemplate[]> {
     const { data, error } = await supabase
       .from('project_provisioning_templates')
       .select('*')
       .eq('category', category)
-      .or('is_public.eq.true,user_id.eq.' + (await supabase.auth.getUser()).data.user?.id)
       .eq('status', 'active')
       .order('usage_count', { ascending: false });
 
     if (error) {
       throw new Error(`Failed to fetch templates by category: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
+  // Get templates by infrastructure provider
+  async getTemplatesByProvider(provider: ProjectProvisioningTemplate['infrastructure_provider']): Promise<ProjectProvisioningTemplate[]> {
+    const { data, error } = await supabase
+      .from('project_provisioning_templates')
+      .select('*')
+      .eq('infrastructure_provider', provider)
+      .eq('status', 'active')
+      .order('usage_count', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch templates by provider: ${error.message}`);
     }
 
     return data || [];
@@ -93,11 +121,33 @@ export const projectProvisioningTemplatesApi = {
     return data;
   },
 
-  // Delete a template (soft delete)
+  // Duplicate a template
+  async duplicateTemplate(id: string, newName: string): Promise<ProjectProvisioningTemplate> {
+    const originalTemplate = await this.getTemplate(id);
+    if (!originalTemplate) {
+      throw new Error('Template not found');
+    }
+
+    const duplicatedTemplate: ProjectProvisioningTemplateInsert = {
+      ...originalTemplate,
+      name: newName,
+      is_public: false,
+      usage_count: 0
+    };
+
+    return this.createTemplate(duplicatedTemplate);
+  },
+
+  // Archive a template
+  async archiveTemplate(id: string): Promise<ProjectProvisioningTemplate> {
+    return this.updateTemplate(id, { status: 'archived' });
+  },
+
+  // Delete a template
   async deleteTemplate(id: string): Promise<void> {
     const { error } = await supabase
       .from('project_provisioning_templates')
-      .update({ status: 'deleted' })
+      .delete()
       .eq('id', id);
 
     if (error) {
@@ -106,28 +156,26 @@ export const projectProvisioningTemplatesApi = {
   },
 
   // Increment usage count
-  async incrementUsageCount(id: string): Promise<void> {
+  async incrementUsage(id: string): Promise<void> {
     const { error } = await supabase
-      .from('project_provisioning_templates')
-      .update({ usage_count: supabase.raw('usage_count + 1') })
-      .eq('id', id);
+      .rpc('increment_template_usage', { template_id: id });
 
     if (error) {
-      throw new Error(`Failed to increment usage count: ${error.message}`);
+      throw new Error(`Failed to increment usage: ${error.message}`);
     }
   },
 
-  // Get popular templates
-  async getPopularTemplates(limit: number = 10): Promise<ProjectProvisioningTemplate[]> {
+  // Search templates
+  async searchTemplates(query: string): Promise<ProjectProvisioningTemplate[]> {
     const { data, error } = await supabase
       .from('project_provisioning_templates')
       .select('*')
+      .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
       .eq('status', 'active')
-      .order('usage_count', { ascending: false })
-      .limit(limit);
+      .order('usage_count', { ascending: false });
 
     if (error) {
-      throw new Error(`Failed to fetch popular templates: ${error.message}`);
+      throw new Error(`Failed to search templates: ${error.message}`);
     }
 
     return data || [];

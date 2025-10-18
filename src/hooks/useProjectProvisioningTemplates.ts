@@ -16,12 +16,14 @@ export const templateKeys = {
   list: (filters: Record<string, any>) => [...templateKeys.lists(), { filters }] as const,
   details: () => [...templateKeys.all, 'detail'] as const,
   detail: (id: string) => [...templateKeys.details(), id] as const,
+  public: () => [...templateKeys.all, 'public'] as const,
   byCategory: (category: string) => [...templateKeys.all, 'category', category] as const,
-  popular: (limit: number) => [...templateKeys.all, 'popular', limit] as const,
+  byProvider: (provider: string) => [...templateKeys.all, 'provider', provider] as const,
+  search: (query: string) => [...templateKeys.all, 'search', query] as const,
 };
 
 // Get all templates
-export function useTemplates() {
+export function useProjectProvisioningTemplates() {
   return useQuery({
     queryKey: templateKeys.lists(),
     queryFn: () => projectProvisioningTemplatesApi.getTemplates(),
@@ -29,18 +31,37 @@ export function useTemplates() {
   });
 }
 
+// Get public templates
+export function usePublicTemplates() {
+  return useQuery({
+    queryKey: templateKeys.public(),
+    queryFn: () => projectProvisioningTemplatesApi.getPublicTemplates(),
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
+}
+
 // Get templates by category
 export function useTemplatesByCategory(category: string) {
   return useQuery({
     queryKey: templateKeys.byCategory(category),
-    queryFn: () => projectProvisioningTemplatesApi.getTemplatesByCategory(category),
+    queryFn: () => projectProvisioningTemplatesApi.getTemplatesByCategory(category as any),
     enabled: !!category,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
+// Get templates by infrastructure provider
+export function useTemplatesByProvider(provider: string) {
+  return useQuery({
+    queryKey: templateKeys.byProvider(provider),
+    queryFn: () => projectProvisioningTemplatesApi.getTemplatesByProvider(provider as any),
+    enabled: !!provider,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
 // Get a single template
-export function useTemplate(id: string) {
+export function useProjectProvisioningTemplate(id: string) {
   return useQuery({
     queryKey: templateKeys.detail(id),
     queryFn: () => projectProvisioningTemplatesApi.getTemplate(id),
@@ -49,17 +70,18 @@ export function useTemplate(id: string) {
   });
 }
 
-// Get popular templates
-export function usePopularTemplates(limit: number = 10) {
+// Search templates
+export function useSearchTemplates(query: string) {
   return useQuery({
-    queryKey: templateKeys.popular(limit),
-    queryFn: () => projectProvisioningTemplatesApi.getPopularTemplates(limit),
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    queryKey: templateKeys.search(query),
+    queryFn: () => projectProvisioningTemplatesApi.searchTemplates(query),
+    enabled: !!query && query.length > 2,
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
 // Create template mutation
-export function useCreateTemplate() {
+export function useCreateProjectProvisioningTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -67,12 +89,13 @@ export function useCreateTemplate() {
       projectProvisioningTemplatesApi.createTemplate(template),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: templateKeys.public() });
     },
   });
 }
 
 // Update template mutation
-export function useUpdateTemplate() {
+export function useUpdateProjectProvisioningTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -81,31 +104,59 @@ export function useUpdateTemplate() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
       queryClient.invalidateQueries({ queryKey: templateKeys.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: templateKeys.public() });
     },
   });
 }
 
-// Delete template mutation
-export function useDeleteTemplate() {
+// Duplicate template mutation
+export function useDuplicateProjectProvisioningTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => projectProvisioningTemplatesApi.deleteTemplate(id),
+    mutationFn: ({ id, newName }: { id: string; newName: string }) =>
+      projectProvisioningTemplatesApi.duplicateTemplate(id, newName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
     },
   });
 }
 
-// Increment usage count mutation
-export function useIncrementUsageCount() {
+// Archive template mutation
+export function useArchiveProjectProvisioningTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => projectProvisioningTemplatesApi.incrementUsageCount(id),
+    mutationFn: (id: string) => projectProvisioningTemplatesApi.archiveTemplate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: templateKeys.public() });
+    },
+  });
+}
+
+// Delete template mutation
+export function useDeleteProjectProvisioningTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => projectProvisioningTemplatesApi.deleteTemplate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: templateKeys.public() });
+    },
+  });
+}
+
+// Increment usage mutation
+export function useIncrementTemplateUsage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => projectProvisioningTemplatesApi.incrementUsage(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: templateKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: templateKeys.popular(10) });
+      queryClient.invalidateQueries({ queryKey: templateKeys.public() });
     },
   });
 }

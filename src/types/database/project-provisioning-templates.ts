@@ -1,6 +1,6 @@
 /**
  * Database types for project_provisioning_templates table
- * Generated: 2024-12-20T15:00:00Z
+ * Generated: 2024-12-20T16:00:00Z
  */
 
 export interface ProjectProvisioningTemplate {
@@ -16,7 +16,7 @@ export interface ProjectProvisioningTemplate {
   repository_template_url: string | null;
   branch_name: string;
   auto_merge_enabled: boolean;
-  infrastructure_provider: 'vercel' | 'cloudflare' | 'aws' | 'gcp' | 'azure' | 'custom' | null;
+  infrastructure_provider: 'vercel' | 'cloudflare' | 'aws' | 'gcp' | 'azure' | 'custom';
   infrastructure_config: Record<string, any>;
   portal_template_id: string | null;
   portal_branding_config: Record<string, any>;
@@ -40,7 +40,7 @@ export interface ProjectProvisioningTemplateInsert {
   repository_template_url?: string | null;
   branch_name?: string;
   auto_merge_enabled?: boolean;
-  infrastructure_provider?: 'vercel' | 'cloudflare' | 'aws' | 'gcp' | 'azure' | 'custom' | null;
+  infrastructure_provider?: 'vercel' | 'cloudflare' | 'aws' | 'gcp' | 'azure' | 'custom';
   infrastructure_config?: Record<string, any>;
   portal_template_id?: string | null;
   portal_branding_config?: Record<string, any>;
@@ -60,7 +60,7 @@ export interface ProjectProvisioningTemplateUpdate {
   repository_template_url?: string | null;
   branch_name?: string;
   auto_merge_enabled?: boolean;
-  infrastructure_provider?: 'vercel' | 'cloudflare' | 'aws' | 'gcp' | 'azure' | 'custom' | null;
+  infrastructure_provider?: 'vercel' | 'cloudflare' | 'aws' | 'gcp' | 'azure' | 'custom';
   infrastructure_config?: Record<string, any>;
   portal_template_id?: string | null;
   portal_branding_config?: Record<string, any>;

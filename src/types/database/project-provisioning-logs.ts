@@ -1,6 +1,6 @@
 /**
  * Database types for project_provisioning_logs table
- * Generated: 2024-12-20T15:00:00Z
+ * Generated: 2024-12-20T16:00:00Z
  */
 
 export interface ProjectProvisioningLog {
@@ -39,3 +39,28 @@ export interface ProjectProvisioningLogUpdate {
 
 // Supabase query result type
 export type ProjectProvisioningLogRow = ProjectProvisioningLog;
+
+// Enhanced log types for better UX
+export interface ProvisioningStepLog {
+  step_name: string;
+  step_type: 'repository' | 'environment' | 'infrastructure' | 'portal' | 'validation' | 'rollback';
+  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'skipped';
+  message: string;
+  details: Record<string, any>;
+  error_message?: string;
+  error_details?: Record<string, any>;
+  started_at?: string;
+  completed_at?: string;
+  duration_ms?: number;
+}
+
+export interface ProvisioningProgress {
+  request_id: string;
+  overall_status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled';
+  progress_percentage: number;
+  current_step: string;
+  steps: ProvisioningStepLog[];
+  started_at: string;
+  completed_at?: string;
+  error_message?: string;
+}

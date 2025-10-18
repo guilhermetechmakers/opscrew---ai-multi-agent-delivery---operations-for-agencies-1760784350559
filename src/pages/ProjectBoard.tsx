@@ -294,7 +294,7 @@ export default function ProjectBoardEnhanced() {
             </div>
             
             {blocker.escalation_level > 0 && (
-              <div className="flex items-center gap-1 text-xs text-orange-600">
+              <div className="flex items-center gap-1 text-xs text-yellow">
                 <Flag className="h-3 w-3" />
                 Escalated (Level {blocker.escalation_level})
               </div>
@@ -431,15 +431,15 @@ export default function ProjectBoardEnhanced() {
                 <div className="text-sm text-muted-foreground">Planned Velocity</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{activeSprint?.actual_velocity || 0}</div>
+                <div className="text-2xl font-bold text-green">{activeSprint?.actual_velocity || 0}</div>
                 <div className="text-sm text-muted-foreground">Actual Velocity</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{tasks.length}</div>
+                <div className="text-2xl font-bold text-primary">{tasks.length}</div>
                 <div className="text-sm text-muted-foreground">Total Tasks</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">{activeBlockers.length}</div>
+                <div className="text-2xl font-bold text-yellow">{activeBlockers.length}</div>
                 <div className="text-sm text-muted-foreground">Active Blockers</div>
               </div>
             </div>
