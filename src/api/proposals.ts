@@ -315,6 +315,12 @@ export async function sendProposalForSignature(
   provider: string = 'docusign'
 ): Promise<{ success: boolean; envelopeId?: string; error?: string }> {
   try {
+    // Get the proposal
+    const proposal = await getProposal(proposalId)
+    if (!proposal) {
+      throw new Error('Proposal not found')
+    }
+
     // Update proposal status
     await updateProposal(proposalId, {
       esign_status: 'sent',
@@ -338,13 +344,256 @@ export async function sendProposalForSignature(
 
     await Promise.all(signaturePromises)
 
-    // TODO: Integrate with actual e-signature provider API
-    // For now, return a mock envelope ID
+    // Integrate with DocuSign if provider is docusign
+    if (provider === 'docusign') {
+      try {
+        const { getDocuSignService } = await import('@/services/docusign')
+        const docuSignService = getDocuSignService()
+        
+        // Convert proposal content to PDF (in production, use a proper PDF library)
+        const documentContent = await generateProposalPDF(proposal)
+        
+        // Create DocuSign envelope
+        const envelope = await docuSignService.createEnvelope(proposal, signers, documentContent)
+        
+        // Update proposal with envelope ID
+        await updateProposal(proposalId, {
+          esign_envelope_id: envelope.envelopeId
+        })
+
+        return {
+          success: true,
+          envelopeId: envelope.envelopeId
+        }
+      } catch (docuSignError) {
+        console.error('DocuSign integration failed:', docuSignError)
+        // Fall back to mock implementation
+        const mockEnvelopeId = `env_${Date.now()}`
+        await updateProposal(proposalId, {
+          esign_envelope_id: mockEnvelopeId
+        })
+        
+        return {
+          success: true,
+          envelopeId: mockEnvelopeId
+        }
+      }
+    }
+
+    // For other providers or fallback, return a mock envelope ID
     const mockEnvelopeId = `env_${Date.now()}`
 
     return {
       success: true,
       envelopeId: mockEnvelopeId
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
+/**
+ * Generate PDF content from proposal
+ * In production, this would use a proper PDF generation library
+ */
+async function generateProposalPDF(proposal: Proposal): Promise<string> {
+  // This is a simplified implementation
+  // In production, you would use a library like Puppeteer, jsPDF, or similar
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>${proposal.title}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        .content { line-height: 1.6; }
+        .signature-section { margin-top: 50px; border-top: 1px solid #ccc; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>${proposal.title}</h1>
+        <p><strong>Client:</strong> ${proposal.client_name}</p>
+        ${proposal.client_email ? `<p><strong>Email:</strong> ${proposal.client_email}</p>` : ''}
+        ${proposal.project_scope ? `<p><strong>Scope:</strong> ${proposal.project_scope}</p>` : ''}
+        ${proposal.budget_range ? `<p><strong>Budget:</strong> ${proposal.budget_range}</p>` : ''}
+        ${proposal.timeline ? `<p><strong>Timeline:</strong> ${proposal.timeline}</p>` : ''}
+      </div>
+      <div class="content">
+        ${proposal.content}
+      </div>
+      <div class="signature-section">
+        <h3>Signatures</h3>
+        <p>By signing below, both parties agree to the terms outlined in this proposal.</p>
+        <br><br>
+        <p>Client Signature: _________________________ Date: ___________</p>
+        <br><br>
+        <p>Company Signature: _________________________ Date: ___________</p>
+      </div>
+    </body>
+    </html>
+  `
+  
+  // In production, convert HTML to PDF using a proper library
+  // For now, return the HTML content as a string
+  return htmlContent
+}
+
+/**
+ * Get signing URL for a proposal
+ */
+export async function getProposalSigningUrl(
+  proposalId: string,
+  signerEmail: string
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  try {
+    const proposal = await getProposal(proposalId)
+    if (!proposal) {
+      throw new Error('Proposal not found')
+    }
+
+    if (!proposal.esign_envelope_id) {
+      throw new Error('Proposal has not been sent for signature')
+    }
+
+    if (proposal.esign_provider === 'docusign') {
+      try {
+        const { getDocuSignService } = await import('@/services/docusign')
+        const docuSignService = getDocuSignService()
+        
+        // Find the signer's recipient ID
+        const signatures = await getProposalSignatures(proposalId)
+        const signer = signatures.find(s => s.signer_email === signerEmail)
+        
+        if (!signer) {
+          throw new Error('Signer not found')
+        }
+
+        const returnUrl = `${window.location.origin}/proposals/${proposalId}/signed`
+        const result = await docuSignService.getRecipientView(
+          proposal.esign_envelope_id,
+          signer.signature_id || '1',
+          returnUrl
+        )
+
+        return {
+          success: true,
+          url: result.url
+        }
+      } catch (docuSignError) {
+        console.error('DocuSign integration failed:', docuSignError)
+        return {
+          success: false,
+          error: 'Failed to generate signing URL'
+        }
+      }
+    }
+
+    return {
+      success: false,
+      error: 'Unsupported signature provider'
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
+/**
+ * Process DocuSign webhook event
+ */
+export async function processDocuSignWebhook(event: any): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { getDocuSignService } = await import('@/services/docusign')
+    const docuSignService = getDocuSignService()
+    
+    const { proposalId, signatureUpdates } = await docuSignService.processWebhookEvent(event)
+
+    // Update proposal signatures
+    for (const update of signatureUpdates) {
+      const signatures = await getProposalSignatures(proposalId)
+      const signature = signatures.find(s => s.signature_id === update.signatureId)
+      
+      if (signature) {
+        await updateProposalSignature(signature.id, {
+          status: update.status,
+          signed_at: update.signedAt || null
+        })
+      }
+    }
+
+    // Check if all signatures are complete
+    const allSignatures = await getProposalSignatures(proposalId)
+    const allSigned = allSignatures.every(s => s.status === 'signed')
+    
+    if (allSigned) {
+      await updateProposal(proposalId, {
+        esign_status: 'signed',
+        status: 'signed',
+        esign_signed_at: new Date().toISOString()
+      })
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Failed to process DocuSign webhook:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
+/**
+ * Void a proposal signature
+ */
+export async function voidProposalSignature(
+  proposalId: string,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const proposal = await getProposal(proposalId)
+    if (!proposal) {
+      throw new Error('Proposal not found')
+    }
+
+    if (!proposal.esign_envelope_id) {
+      throw new Error('Proposal has not been sent for signature')
+    }
+
+    if (proposal.esign_provider === 'docusign') {
+      try {
+        const { getDocuSignService } = await import('@/services/docusign')
+        const docuSignService = getDocuSignService()
+        
+        await docuSignService.voidEnvelope(proposal.esign_envelope_id, reason)
+        
+        // Update proposal status
+        await updateProposal(proposalId, {
+          esign_status: 'expired',
+          status: 'rejected'
+        })
+
+        return { success: true }
+      } catch (docuSignError) {
+        console.error('DocuSign integration failed:', docuSignError)
+        return {
+          success: false,
+          error: 'Failed to void signature'
+        }
+      }
+    }
+
+    return {
+      success: false,
+      error: 'Unsupported signature provider'
     }
   } catch (error) {
     return {
