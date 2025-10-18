@@ -37,74 +37,74 @@ const features = [
     icon: Bot,
     title: "AI Intake Agent",
     description: "Qualifies leads, captures requirements, and generates proposals automatically with e-signature integration.",
-    gradient: "from-blue-500/20 to-cyan-500/20",
-    borderColor: "border-blue-500/30"
+    gradient: "from-primary/20 to-accent/20",
+    borderColor: "border-primary/30"
   },
   {
     icon: GitBranch,
     title: "Project Spin-Up Agent",
     description: "Provisions repos, environments, task templates, and branded client portals in minutes.",
-    gradient: "from-purple-500/20 to-pink-500/20",
-    borderColor: "border-purple-500/30"
+    gradient: "from-accent/20 to-primary/20",
+    borderColor: "border-accent/30"
   },
   {
     icon: Target,
     title: "PM Agent",
     description: "Plans sprints, assigns tasks, writes acceptance criteria, and chases blockers automatically.",
-    gradient: "from-green-500/20 to-emerald-500/20",
-    borderColor: "border-green-500/30"
+    gradient: "from-primary/20 to-accent/20",
+    borderColor: "border-primary/30"
   },
   {
     icon: MessageSquare,
     title: "Comms Agent",
     description: "Summarizes meetings, posts updates, and converts feedback into actionable tickets.",
-    gradient: "from-orange-500/20 to-red-500/20",
-    borderColor: "border-orange-500/30"
+    gradient: "from-accent/20 to-primary/20",
+    borderColor: "border-accent/30"
   },
   {
     icon: Code,
     title: "Research/Copilot Agent",
     description: "Drafts specs, user stories, test plans, and PR drafts aligned with your tech stack.",
-    gradient: "from-indigo-500/20 to-blue-500/20",
-    borderColor: "border-indigo-500/30"
+    gradient: "from-primary/20 to-accent/20",
+    borderColor: "border-primary/30"
   },
   {
     icon: Rocket,
     title: "Launch Agent",
     description: "Runs QA/security checklists, coordinates deploys, and manages release communications.",
-    gradient: "from-yellow-500/20 to-orange-500/20",
-    borderColor: "border-yellow-500/30"
+    gradient: "from-accent/20 to-primary/20",
+    borderColor: "border-accent/30"
   }
 ];
 
 const workflowSteps = [
   {
     step: "01",
-    title: "Intake & Qualification",
+    title: "Intake",
     description: "AI agent qualifies leads through intelligent conversation, capturing requirements and budget details.",
     icon: Bot,
-    color: "text-blue-400"
+    color: "text-primary"
   },
   {
     step: "02", 
-    title: "Proposal & E-Sign",
+    title: "Spin-Up",
     description: "Generate professional proposals and SoWs with automated e-signature workflows.",
     icon: FileText,
-    color: "text-purple-400"
+    color: "text-accent"
   },
   {
     step: "03",
-    title: "Project Provisioning",
+    title: "Delivery",
     description: "Automatically provision repos, environments, and branded client portals.",
     icon: Cloud,
-    color: "text-green-400"
+    color: "text-primary"
   },
   {
     step: "04",
-    title: "AI-Powered Delivery",
+    title: "Launch/Handover",
     description: "Specialized agents manage the entire delivery process with human oversight.",
     icon: Settings,
-    color: "text-orange-400"
+    color: "text-accent"
   }
 ];
 
@@ -116,7 +116,7 @@ const testimonials = [
     content: "OpsCrew has revolutionized how we handle client projects. The AI agents save us 40+ hours per week and our client satisfaction has increased by 60%.",
     rating: 5,
     avatar: "SJ",
-    gradient: "from-blue-500 to-purple-500"
+    gradient: "from-primary to-accent"
   },
   {
     name: "Mike Chen",
@@ -125,7 +125,7 @@ const testimonials = [
     content: "The automated provisioning and project management features are game-changers. We've reduced project setup time from days to minutes.",
     rating: 5,
     avatar: "MC",
-    gradient: "from-green-500 to-blue-500"
+    gradient: "from-accent to-primary"
   },
   {
     name: "Emily Rodriguez",
@@ -134,8 +134,17 @@ const testimonials = [
     content: "The AI agents handle all our operational overhead so we can focus on creative work. It's like having a full operations team.",
     rating: 5,
     avatar: "ER",
-    gradient: "from-pink-500 to-orange-500"
+    gradient: "from-primary to-accent"
   }
+];
+
+const customerLogos = [
+  { name: "TechStart Agency", logo: "TS" },
+  { name: "Digital Solutions", logo: "DS" },
+  { name: "Creative Studio", logo: "CS" },
+  { name: "Innovation Labs", logo: "IL" },
+  { name: "Future Works", logo: "FW" },
+  { name: "NextGen Agency", logo: "NG" }
 ];
 
 const pricingPlans = [
@@ -253,15 +262,15 @@ export default function LandingPage() {
               transition={{ duration: 0.8, delay: 0.7 }}
             >
               <Button asChild size="lg" className="btn-primary text-lg px-8 py-6 h-14 group">
-                <Link to="/signup" className="flex items-center gap-2">
-                  Start Free Trial
+                <Link to="/dashboard/intake" className="flex items-center gap-2">
+                  Start Intake
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-14 group border-primary/30 hover:border-primary/50">
-                <Link to="/login" className="flex items-center gap-2">
+                <Link to="/contact" className="flex items-center gap-2">
                   <Play className="w-5 h-5" />
-                  Watch Demo
+                  Book Demo
                 </Link>
               </Button>
             </motion.div>
@@ -442,8 +451,40 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Customer Logos */}
+      <section className="py-16 bg-gradient-to-b from-background to-card/30 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div 
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <p className="text-muted-foreground text-lg mb-8">
+              Trusted by leading agencies worldwide
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center justify-items-center">
+              {customerLogos.map((logo, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ scale: 1.1 }}
+                  className="w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center text-primary font-bold text-lg hover:from-primary/30 hover:to-accent/30 transition-all duration-300"
+                >
+                  {logo.logo}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Testimonials */}
-      <section className="py-24 bg-gradient-to-b from-background to-card/30 relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-b from-card/30 to-background relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div 
@@ -457,7 +498,7 @@ export default function LandingPage() {
               Testimonials
             </Badge>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Trusted by Leading Agencies
+              Customer Testimonials
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               See how OpsCrew is transforming operations for agencies worldwide
@@ -509,7 +550,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing Teaser Section */}
       <section className="py-24 bg-gradient-to-b from-card/30 to-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
@@ -578,7 +619,7 @@ export default function LandingPage() {
                           : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                       }`}
                     >
-                      <Link to={plan.cta === "Contact Sales" ? "/contact" : "/signup"}>
+                      <Link to={plan.cta === "Contact Sales" ? "/contact" : "/pricing"}>
                         {plan.cta}
                         <ArrowRight className="w-5 h-5 ml-2" />
                       </Link>
@@ -588,6 +629,22 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+
+          {/* CTA to full pricing page */}
+          <motion.div 
+            className="text-center mt-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            viewport={{ once: true }}
+          >
+            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-14 group border-primary/30 hover:border-primary/50">
+              <Link to="/pricing" className="flex items-center gap-2">
+                View Full Pricing Details
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+          </motion.div>
         </div>
       </section>
 
@@ -611,15 +668,15 @@ export default function LandingPage() {
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
               <Button asChild size="lg" className="btn-primary text-lg px-8 py-6 h-14 group">
-                <Link to="/signup" className="flex items-center gap-2">
-                  Start Your Free Trial
+                <Link to="/dashboard/intake" className="flex items-center gap-2">
+                  Start Intake
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-14 group border-primary/30 hover:border-primary/50">
-                <Link to="/login" className="flex items-center gap-2">
+                <Link to="/contact" className="flex items-center gap-2">
                   <Play className="w-5 h-5" />
-                  Schedule Demo
+                  Book Demo
                 </Link>
               </Button>
             </div>
@@ -705,8 +762,8 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold text-foreground mb-6">Support</h3>
               <ul className="space-y-4 text-muted-foreground">
+                <li><Link to="/docs" className="hover:text-primary transition-colors">Docs</Link></li>
                 <li><Link to="/help" className="hover:text-primary transition-colors">Help Center</Link></li>
-                <li><Link to="/docs" className="hover:text-primary transition-colors">Documentation</Link></li>
                 <li><Link to="/status" className="hover:text-primary transition-colors">Status</Link></li>
                 <li><Link to="/community" className="hover:text-primary transition-colors">Community</Link></li>
                 <li><Link to="/security" className="hover:text-primary transition-colors">Security</Link></li>
@@ -720,9 +777,9 @@ export default function LandingPage() {
                 &copy; 2024 OpsCrew. All rights reserved.
               </p>
               <div className="flex gap-6 text-sm text-muted-foreground">
-                <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
-                <Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
-                <Link to="/cookies" className="hover:text-primary transition-colors">Cookie Policy</Link>
+                <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+                <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
+                <Link to="/contact" className="hover:text-primary transition-colors">Contact</Link>
               </div>
             </div>
           </div>
