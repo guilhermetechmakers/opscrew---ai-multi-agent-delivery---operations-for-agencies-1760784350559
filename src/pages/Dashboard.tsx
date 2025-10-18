@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Bot, 
   FolderOpen, 
@@ -32,14 +33,97 @@ import {
   Shield,
   GitBranch,
   Globe,
-  Rocket
+  Rocket,
+  Star,
+  Award,
+  TrendingUp as TrendingUpIcon,
+  Eye,
+  Filter,
+  Download,
+  Upload,
+  Play,
+  Pause,
+  StopCircle,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Copy,
+  Share,
+  Bookmark,
+  Heart,
+  ThumbsUp,
+  MessageCircle,
+  Phone,
+  Mail,
+  MapPin,
+  Building,
+  User,
+  UserCheck,
+  UserX,
+  UserPlus,
+  UserMinus,
+  Crown,
+  Sparkles,
+  Flame,
+  Sun,
+  Moon,
+  Cloud,
+  CloudRain,
+  CloudSnow,
+  Wind,
+  Droplets,
+  Thermometer,
+  Gauge,
+  Timer,
+  Stopwatch,
+  Clock3,
+  Clock4,
+  Clock5,
+  Clock6,
+  Clock7,
+  Clock8,
+  Clock9,
+  Clock10,
+  Clock11,
+  Clock12,
+  Calendar as CalendarIcon,
+  CalendarDays,
+  CalendarCheck,
+  CalendarX,
+  CalendarPlus,
+  CalendarMinus,
+  CalendarRange,
+  CalendarSearch,
+  CalendarClock,
+  CalendarHeart,
+  CalendarStar,
+  CalendarUser,
+  CalendarSettings,
+  CalendarEdit,
+  CalendarTrash,
+  CalendarDownload,
+  CalendarUpload,
+  CalendarShare,
+  CalendarCopy,
+  CalendarBookmark,
+  CalendarHeart as CalendarHeartIcon,
+  CalendarStar as CalendarStarIcon,
+  CalendarUser as CalendarUserIcon,
+  CalendarSettings as CalendarSettingsIcon,
+  CalendarEdit as CalendarEditIcon,
+  CalendarTrash as CalendarTrashIcon,
+  CalendarDownload as CalendarDownloadIcon,
+  CalendarUpload as CalendarUploadIcon,
+  CalendarShare as CalendarShareIcon,
+  CalendarCopy as CalendarCopyIcon,
+  CalendarBookmark as CalendarBookmarkIcon
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useDashboardStats, useRecentProjects, useAgentActivity, useProjectProgressData } from "@/hooks/useDashboard";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, LineChart, Line, Area, AreaChart, RadialBarChart, RadialBar, ComposedChart, Scatter, ScatterChart, Treemap, FunnelChart, Funnel, Sankey } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 // Status color mappings following OpsCrew design system
@@ -456,6 +540,9 @@ export default function Dashboard() {
   const { data: agentActivity, isLoading: activityLoading } = useAgentActivity(10);
   const { data: progressData, isLoading: progressLoading } = useProjectProgressData();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState("7d");
 
   // Use mock data if API fails
   const displayStats = stats || mockStats;
@@ -464,9 +551,23 @@ export default function Dashboard() {
   // Mock trend data for metric cards
   const trendData = Array.from({ length: 7 }, (_, i) => Math.floor(Math.random() * 100));
 
+  // Refresh handler
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Simulate refresh delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsRefreshing(false);
+  };
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(handleRefresh, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
-      {/* Enhanced Header with Search */}
+      {/* Enhanced Header with Search and Tabs */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -475,12 +576,35 @@ export default function Dashboard() {
       >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-              Dashboard
-            </h1>
-            <p className="text-muted-foreground text-lg mt-2">
-              Welcome back! Here's what's happening with your operations.
-            </p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                  Dashboard
+                </h1>
+                <p className="text-muted-foreground text-lg">
+                  Welcome back! Here's what's happening with your operations.
+                </p>
+              </div>
+            </div>
+            
+            {/* Quick Stats Pills */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                <CheckCircle className="w-3 h-3 mr-1" />
+                All systems operational
+              </Badge>
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+                <Activity className="w-3 h-3 mr-1" />
+                12 active agents
+              </Badge>
+              <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
+                <Zap className="w-3 h-3 mr-1" />
+                98% efficiency
+              </Badge>
+            </div>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3">
@@ -494,8 +618,14 @@ export default function Dashboard() {
               />
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="hover:bg-secondary/80">
-                <RefreshCw className="w-4 h-4 mr-2" />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="hover:bg-secondary/80"
+              >
+                <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
                 Refresh
               </Button>
               <Button className="btn-primary">
@@ -505,26 +635,58 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Dashboard Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mt-6"
+        >
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="projects" className="flex items-center gap-2">
+                <FolderOpen className="w-4 h-4" />
+                Projects
+              </TabsTrigger>
+              <TabsTrigger value="agents" className="flex items-center gap-2">
+                <Bot className="w-4 h-4" />
+                Agents
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                Analytics
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </motion.div>
       </motion.div>
 
-      {/* System Status Banner */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-6"
-      >
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
-          <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-emerald-500">All systems operational</p>
-            <p className="text-xs text-muted-foreground">Last updated 2 minutes ago</p>
-          </div>
-          <Button variant="ghost" size="sm" className="text-emerald-500 hover:text-emerald-600">
-            <RefreshCw className="w-4 h-4" />
-          </Button>
-        </div>
-      </motion.div>
+      {/* Main Dashboard Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsContent value="overview" className="space-y-6">
+          {/* System Status Banner */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-6"
+          >
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-emerald-500">All systems operational</p>
+                <p className="text-xs text-muted-foreground">Last updated 2 minutes ago</p>
+              </div>
+              <Button variant="ghost" size="sm" className="text-emerald-500 hover:text-emerald-600">
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+            </div>
+          </motion.div>
 
       {/* Enhanced Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
@@ -993,53 +1155,172 @@ export default function Dashboard() {
         </Card>
       </motion.div>
 
-      {/* Quick Stats Widget */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.7 }}
-        className="mt-8"
-      >
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-indigo-500/10 flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-indigo-500" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Quick Stats</CardTitle>
-                <CardDescription className="text-sm">
-                  Key performance indicators at a glance
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-500">24</div>
-                <div className="text-xs text-muted-foreground">Tasks Completed</div>
-                <div className="text-xs text-emerald-500 mt-1">+12% this week</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-500">8.5</div>
-                <div className="text-xs text-muted-foreground">Avg. Rating</div>
-                <div className="text-xs text-blue-500 mt-1">+0.3 this month</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-500">156</div>
-                <div className="text-xs text-muted-foreground">AI Interactions</div>
-                <div className="text-xs text-purple-500 mt-1">+23% this week</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">3.2h</div>
-                <div className="text-xs text-muted-foreground">Avg. Response</div>
-                <div className="text-xs text-orange-500 mt-1">-15% this week</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+          {/* Quick Stats Widget */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+            className="mt-8"
+          >
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-indigo-500/10 flex items-center justify-center">
+                    <BarChart3 className="w-5 h-5 text-indigo-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">Quick Stats</CardTitle>
+                    <CardDescription className="text-sm">
+                      Key performance indicators at a glance
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-emerald-500">24</div>
+                    <div className="text-xs text-muted-foreground">Tasks Completed</div>
+                    <div className="text-xs text-emerald-500 mt-1">+12% this week</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-500">8.5</div>
+                    <div className="text-xs text-muted-foreground">Avg. Rating</div>
+                    <div className="text-xs text-blue-500 mt-1">+0.3 this month</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-500">156</div>
+                    <div className="text-xs text-muted-foreground">AI Interactions</div>
+                    <div className="text-xs text-purple-500 mt-1">+23% this week</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-500">3.2h</div>
+                    <div className="text-xs text-muted-foreground">Avg. Response</div>
+                    <div className="text-xs text-orange-500 mt-1">-15% this week</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="projects" className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 flex items-center justify-center">
+                      <FolderOpen className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Project Management</CardTitle>
+                      <CardDescription className="text-sm">
+                        Manage and monitor all your projects
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Button className="btn-primary">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Project
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <FolderOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Project Management</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Advanced project management features coming soon
+                  </p>
+                  <Button variant="outline">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create First Project
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="agents" className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-500/10 flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">AI Agents</CardTitle>
+                    <CardDescription className="text-sm">
+                      Monitor and manage your AI agent workforce
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <Bot className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">AI Agent Management</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Advanced agent management and monitoring features coming soon
+                  </p>
+                  <Button variant="outline">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Configure Agents
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-500/10 flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">Analytics & Insights</CardTitle>
+                    <CardDescription className="text-sm">
+                      Deep insights into your operations and performance
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <Activity className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Advanced Analytics</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Comprehensive analytics and reporting features coming soon
+                  </p>
+                  <Button variant="outline">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    View Reports
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
