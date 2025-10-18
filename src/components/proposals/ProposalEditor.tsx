@@ -3,7 +3,7 @@
  * Rich text editor with templating and variable injection for proposals
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
 import { 
   Save, 
   Send, 
@@ -25,9 +26,22 @@ import {
   Mail,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
+  Edit3,
+  Copy,
+  Share2,
+  Settings,
+  History,
+  Zap,
+  Shield,
+  Lock,
+  Unlock
 } from 'lucide-react'
 import { useProposal, useUpdateProposal, useSendProposalForSignature } from '@/hooks/useProposals'
+import { RichTextEditor } from './RichTextEditor'
+import { TemplateLibrary } from './TemplateLibrary'
+import { ApprovalWorkflow } from './ApprovalWorkflow'
+import { SignatureStatusTracker } from './SignatureStatusTracker'
 import type { Proposal, ProposalUpdate } from '@/types/database/proposals'
 
 interface ProposalEditorProps {
@@ -35,13 +49,17 @@ interface ProposalEditorProps {
   onSave?: (proposal: Proposal) => void
   onSend?: (proposal: Proposal) => void
   readOnly?: boolean
+  showTemplates?: boolean
+  showApproval?: boolean
 }
 
 export function ProposalEditor({ 
   proposalId, 
   onSave, 
   onSend, 
-  readOnly = false 
+  readOnly = false,
+  showTemplates = true,
+  showApproval = true
 }: ProposalEditorProps) {
   const { data: proposal, isLoading, error } = useProposal(proposalId)
   const updateProposal = useUpdateProposal()
@@ -50,6 +68,10 @@ export function ProposalEditor({
   const [formData, setFormData] = useState<ProposalUpdate>({})
   const [isDirty, setIsDirty] = useState(false)
   const [activeTab, setActiveTab] = useState('content')
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false)
+  const [showApprovalWorkflow, setShowApprovalWorkflow] = useState(false)
+  const [autoSave, setAutoSave] = useState(true)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
   useEffect(() => {
     if (proposal) {
@@ -71,6 +93,27 @@ export function ProposalEditor({
     setIsDirty(true)
   }
 
+  const handleContentChange = useCallback((content: string) => {
+    setFormData(prev => ({ ...prev, content }))
+    setIsDirty(true)
+  }, [])
+
+  const handleVariableChange = useCallback((variables: Record<string, any>) => {
+    setFormData(prev => ({ ...prev, variables }))
+    setIsDirty(true)
+  }, [])
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (autoSave && isDirty && proposal) {
+      const timeoutId = setTimeout(() => {
+        handleSave()
+      }, 2000) // Auto-save after 2 seconds of inactivity
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [formData, autoSave, isDirty, proposal])
+
   const handleSave = async () => {
     if (!proposal) return
 
@@ -81,10 +124,33 @@ export function ProposalEditor({
       })
       
       setIsDirty(false)
+      setLastSaved(new Date())
       onSave?.(updatedProposal)
     } catch (error) {
       console.error('Failed to save proposal:', error)
     }
+  }
+
+  const handleTemplateSelect = (template: any) => {
+    setFormData(prev => ({
+      ...prev,
+      title: template.title_template,
+      content: template.content_template,
+      variables: template.variables || {}
+    }))
+    setIsDirty(true)
+    setShowTemplateLibrary(false)
+  }
+
+  const handleCopyProposal = () => {
+    if (proposal) {
+      navigator.clipboard.writeText(proposal.content)
+    }
+  }
+
+  const handleExportPDF = () => {
+    // TODO: Implement PDF export
+    console.log('Export PDF functionality to be implemented')
   }
 
   const handleSend = async () => {
@@ -175,17 +241,59 @@ export function ProposalEditor({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {formData.title || proposal.title}
-          </h1>
+          <div className="flex items-center space-x-2">
+            <Edit3 className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground">
+              {formData.title || proposal.title}
+            </h1>
+          </div>
           <Badge className={getStatusColor(proposal.status)}>
             {getStatusIcon(proposal.status)}
             <span className="ml-1 capitalize">{proposal.status.replace('_', ' ')}</span>
           </Badge>
+          {proposal.requires_approval && (
+            <Badge variant="outline" className="flex items-center gap-1">
+              <Shield className="h-3 w-3" />
+              Requires Approval
+            </Badge>
+          )}
         </div>
         
         {!readOnly && (
           <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Switch
+                checked={autoSave}
+                onCheckedChange={setAutoSave}
+                className="scale-90"
+              />
+              <span>Auto-save</span>
+            </div>
+            
+            {lastSaved && (
+              <div className="text-xs text-muted-foreground">
+                Last saved: {lastSaved.toLocaleTimeString()}
+              </div>
+            )}
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopyProposal}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Copy
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+            
             <Button
               variant="outline"
               onClick={handleSave}
@@ -210,32 +318,70 @@ export function ProposalEditor({
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="signatures">Signatures</TabsTrigger>
-          <TabsTrigger value="preview">Preview</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="content" className="flex items-center gap-2">
+            <Edit3 className="h-4 w-4" />
+            Content
+          </TabsTrigger>
+          <TabsTrigger value="details" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Details
+          </TabsTrigger>
+          <TabsTrigger value="approval" className="flex items-center gap-2" disabled={!showApproval}>
+            <Shield className="h-4 w-4" />
+            Approval
+          </TabsTrigger>
+          <TabsTrigger value="signatures" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Signatures
+          </TabsTrigger>
+          <TabsTrigger value="preview" className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Preview
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="content" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Edit3 className="h-5 w-5" />
+              Proposal Content
+            </CardTitle>
+            {showTemplates && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowTemplateLibrary(true)}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Templates
+              </Button>
+            )}
+          </div>
+          
           <Card>
-            <CardHeader>
-              <CardTitle>Proposal Content</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={formData.content || ''}
-                onChange={(e) => handleInputChange('content', e.target.value)}
-                placeholder="Enter your proposal content here..."
-                className="min-h-[400px] font-mono text-sm"
+            <CardContent className="p-0">
+              <RichTextEditor
+                content={formData.content || ''}
+                onChange={handleContentChange}
+                variables={[
+                  { key: 'client_name', label: 'Client Name', type: 'text', required: true },
+                  { key: 'project_scope', label: 'Project Scope', type: 'text' },
+                  { key: 'budget_range', label: 'Budget Range', type: 'currency' },
+                  { key: 'timeline', label: 'Timeline', type: 'text' },
+                  { key: 'company_name', label: 'Company Name', type: 'text' },
+                  { key: 'proposal_date', label: 'Proposal Date', type: 'date' }
+                ]}
+                onVariablesChange={handleVariableChange}
                 disabled={readOnly}
+                className="min-h-[500px]"
               />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="details" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -245,12 +391,13 @@ export function ProposalEditor({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="client_name">Client Name</Label>
+                  <Label htmlFor="client_name">Client Name *</Label>
                   <Input
                     id="client_name"
                     value={formData.client_name || ''}
                     onChange={(e) => handleInputChange('client_name', e.target.value)}
                     disabled={readOnly}
+                    placeholder="Enter client name"
                   />
                 </div>
                 <div>
@@ -261,6 +408,7 @@ export function ProposalEditor({
                     value={formData.client_email || ''}
                     onChange={(e) => handleInputChange('client_email', e.target.value)}
                     disabled={readOnly}
+                    placeholder="client@example.com"
                   />
                 </div>
               </CardContent>
@@ -281,71 +429,90 @@ export function ProposalEditor({
                     value={formData.project_scope || ''}
                     onChange={(e) => handleInputChange('project_scope', e.target.value)}
                     disabled={readOnly}
+                    placeholder="Describe the project scope..."
+                    rows={3}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="budget_range">Budget Range</Label>
-                  <Input
-                    id="budget_range"
-                    value={formData.budget_range || ''}
-                    onChange={(e) => handleInputChange('budget_range', e.target.value)}
-                    disabled={readOnly}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="timeline">Timeline</Label>
-                  <Input
-                    id="timeline"
-                    value={formData.timeline || ''}
-                    onChange={(e) => handleInputChange('timeline', e.target.value)}
-                    disabled={readOnly}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="budget_range">Budget Range</Label>
+                    <Input
+                      id="budget_range"
+                      value={formData.budget_range || ''}
+                      onChange={(e) => handleInputChange('budget_range', e.target.value)}
+                      disabled={readOnly}
+                      placeholder="$10,000 - $25,000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="timeline">Timeline</Label>
+                    <Input
+                      id="timeline"
+                      value={formData.timeline || ''}
+                      onChange={(e) => handleInputChange('timeline', e.target.value)}
+                      disabled={readOnly}
+                      placeholder="3-6 months"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
 
-        <TabsContent value="signatures" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Mail className="h-5 w-5" />
-                <span>E-Signature Status</span>
+                <Settings className="h-5 w-5" />
+                <span>Proposal Settings</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {proposal.esign_status === 'not_sent' ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>This proposal has not been sent for signature yet.</p>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="requires_approval">Requires Approval</Label>
+                  <p className="text-sm text-muted-foreground">
+                    This proposal must be approved before sending
+                  </p>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Signature Status</p>
-                      <p className="text-sm text-gray-600 capitalize">
-                        {proposal.esign_status.replace('_', ' ')}
-                      </p>
-                    </div>
-                    <Badge className={getStatusColor(proposal.esign_status as any)}>
-                      {getStatusIcon(proposal.esign_status as any)}
-                    </Badge>
-                  </div>
-                  
-                  {proposal.esign_envelope_id && (
-                    <div className="text-sm text-gray-600">
-                      <p><strong>Envelope ID:</strong> {proposal.esign_envelope_id}</p>
-                      {proposal.esign_signed_at && (
-                        <p><strong>Signed At:</strong> {new Date(proposal.esign_signed_at).toLocaleString()}</p>
-                      )}
-                    </div>
-                  )}
+                <Switch
+                  id="requires_approval"
+                  checked={formData.requires_approval ?? proposal.requires_approval}
+                  onCheckedChange={(checked) => handleInputChange('requires_approval', checked)}
+                  disabled={readOnly}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="version">Version</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Current version: {proposal.version}
+                  </p>
                 </div>
-              )}
+                <Badge variant="outline">
+                  v{proposal.version}
+                </Badge>
+              </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="approval" className="space-y-4">
+          {showApproval && (
+            <ApprovalWorkflow
+              proposalId={proposalId}
+              proposal={proposal}
+              onStatusChange={handleProposalSave}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="signatures" className="space-y-4">
+          <SignatureStatusTracker
+            proposalId={proposalId}
+            proposal={proposal}
+            onStatusChange={handleProposalSave}
+          />
         </TabsContent>
 
         <TabsContent value="preview" className="space-y-4">
@@ -357,47 +524,73 @@ export function ProposalEditor({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="prose max-w-none">
-                <h1 className="text-3xl font-bold mb-4">
+              <div className="prose prose-invert max-w-none">
+                <h1 className="text-3xl font-bold mb-4 gradient-text-primary">
                   {formData.title || proposal.title}
                 </h1>
                 
-                <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <div className="bg-muted/20 p-6 rounded-xl mb-8 border border-border/50">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-primary" />
                       <strong>Client:</strong> {formData.client_name || proposal.client_name}
                     </div>
                     {formData.client_email || proposal.client_email ? (
-                      <div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-primary" />
                         <strong>Email:</strong> {formData.client_email || proposal.client_email}
                       </div>
                     ) : null}
                     {formData.project_scope || proposal.project_scope ? (
-                      <div>
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary" />
                         <strong>Scope:</strong> {formData.project_scope || proposal.project_scope}
                       </div>
                     ) : null}
                     {formData.budget_range || proposal.budget_range ? (
-                      <div>
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-primary" />
                         <strong>Budget:</strong> {formData.budget_range || proposal.budget_range}
                       </div>
                     ) : null}
                     {formData.timeline || proposal.timeline ? (
-                      <div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
                         <strong>Timeline:</strong> {formData.timeline || proposal.timeline}
                       </div>
                     ) : null}
                   </div>
                 </div>
                 
-                <div className="whitespace-pre-wrap">
-                  {formData.content || proposal.content}
-                </div>
+                <div 
+                  className="prose prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ 
+                    __html: formData.content || proposal.content 
+                  }}
+                />
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Template Library Modal */}
+      {showTemplateLibrary && (
+        <TemplateLibrary
+          onSelectTemplate={handleTemplateSelect}
+          onClose={() => setShowTemplateLibrary(false)}
+        />
+      )}
+
+      {/* Approval Workflow Modal */}
+      {showApprovalWorkflow && (
+        <ApprovalWorkflow
+          proposalId={proposalId}
+          proposal={proposal}
+          onClose={() => setShowApprovalWorkflow(false)}
+          onStatusChange={handleProposalSave}
+        />
+      )}
     </div>
   )
 }

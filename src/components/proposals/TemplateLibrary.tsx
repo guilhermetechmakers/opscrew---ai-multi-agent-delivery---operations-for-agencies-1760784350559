@@ -92,62 +92,69 @@ export function TemplateLibrary({
     const IconComponent = categoryIcons[template.category] || FileText
     
     return (
-      <Card 
-        className="group hover:shadow-lg transition-all duration-200 cursor-pointer animate-fade-in-up"
-        onClick={() => onSelectTemplate(template)}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="group"
       >
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <IconComponent className="w-5 h-5 text-primary" />
+        <Card 
+          className="group hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-primary/5"
+          onClick={() => onSelectTemplate(template)}
+        >
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-200">
+                  <IconComponent className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-base text-foreground">{template.name}</CardTitle>
+                  <CardDescription className="text-sm text-muted-foreground">
+                    {categoryLabels[template.category]}
+                  </CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-base">{template.name}</CardTitle>
-                <CardDescription className="text-sm">
-                  {categoryLabels[template.category]}
-                </CardDescription>
-              </div>
-            </div>
-            {isPublic && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Star className="w-3 h-3" />
-                Public
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {template.description && (
-            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-              {template.description}
-            </p>
-          )}
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Download className="w-3 h-3" />
-                {template.usage_count} uses
-              </span>
-              {template.last_used_at && (
-                <span>
-                  Used {new Date(template.last_used_at).toLocaleDateString()}
-                </span>
+              {isPublic && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Star className="w-3 h-3" />
+                  Public
+                </Badge>
               )}
             </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {template.description && (
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                {template.description}
+              </p>
+            )}
             
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                <Eye className="w-4 h-4" />
-              </Button>
-              <Button size="sm" className="btn-primary">
-                Use Template
-              </Button>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Download className="w-3 h-3" />
+                  {template.usage_count} uses
+                </span>
+                {template.last_used_at && (
+                  <span>
+                    Used {new Date(template.last_used_at).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10">
+                  <Eye className="w-4 h-4" />
+                </Button>
+                <Button size="sm" className="btn-primary">
+                  Use Template
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
     )
   }
 
@@ -156,7 +163,7 @@ export function TemplateLibrary({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Template Library</h2>
+          <h2 className="text-2xl font-bold text-foreground gradient-text-primary">Template Library</h2>
           <p className="text-muted-foreground">
             Choose from our collection of proposal templates or create your own
           </p>
@@ -175,20 +182,20 @@ export function TemplateLibrary({
             placeholder="Search templates..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 focus:ring-primary/20"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {categories.map((category) => (
             <Button
               key={category.value}
               variant={selectedCategory === category.value ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedCategory(category.value)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 hover:bg-primary/10 hover:text-primary transition-all duration-200"
             >
               {category.label}
-              <Badge variant="secondary" className="ml-1">
+              <Badge variant="secondary" className="ml-1 text-xs">
                 {category.count}
               </Badge>
             </Button>

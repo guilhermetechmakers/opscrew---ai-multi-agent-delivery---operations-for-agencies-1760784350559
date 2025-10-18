@@ -165,18 +165,18 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
   return (
     <div className="space-y-6">
       {/* Status Overview */}
-      <Card>
+      <Card className="border-primary/20 bg-primary/5">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <FileText className="h-5 w-5" />
-            <span>E-Signature Status</span>
+            <FileText className="h-5 w-5 text-primary" />
+            <span className="gradient-text-primary">E-Signature Status</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-6 bg-card/50 rounded-xl border border-border/30">
             <div>
-              <p className="font-medium">Current Status</p>
-              <p className="text-sm text-gray-600 capitalize">
+              <p className="font-medium text-foreground">Current Status</p>
+              <p className="text-sm text-muted-foreground capitalize">
                 {proposal.esign_status.replace('_', ' ')}
               </p>
             </div>
@@ -189,12 +189,12 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
           </div>
           
           {proposal.esign_envelope_id && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div className="mt-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="text-sm text-primary font-medium">
                 <strong>Envelope ID:</strong> {proposal.esign_envelope_id}
               </p>
               {proposal.esign_signed_at && (
-                <p className="text-sm text-blue-800 mt-1">
+                <p className="text-sm text-primary mt-1">
                   <strong>Signed:</strong> {new Date(proposal.esign_signed_at).toLocaleString()}
                 </p>
               )}
@@ -208,14 +208,17 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
         {canSend && (
           <Dialog open={isSendDialogOpen} onOpenChange={setIsSendDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="btn-primary">
                 <Send className="h-4 w-4 mr-2" />
                 Send for Signature
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Send Proposal for E-Signature</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  <Send className="h-5 w-5 text-primary" />
+                  Send Proposal for E-Signature
+                </DialogTitle>
                 <DialogDescription>
                   Configure signers and send this proposal for electronic signature.
                 </DialogDescription>
@@ -230,23 +233,32 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
                   
                   <div className="space-y-3">
                     {signers.map((signer, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg">
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-center space-x-3 p-4 border border-border/50 rounded-lg hover:border-primary/20 transition-colors duration-200"
+                      >
                         <div className="flex-1 grid grid-cols-3 gap-3">
                           <Input
                             placeholder="Full Name"
                             value={signer.name}
                             onChange={(e) => handleSignerChange(index, 'name', e.target.value)}
+                            className="focus:ring-primary/20"
                           />
                           <Input
                             placeholder="Email Address"
                             type="email"
                             value={signer.email}
                             onChange={(e) => handleSignerChange(index, 'email', e.target.value)}
+                            className="focus:ring-primary/20"
                           />
                           <Input
                             placeholder="Role (optional)"
                             value={signer.role}
                             onChange={(e) => handleSignerChange(index, 'role', e.target.value)}
+                            className="focus:ring-primary/20"
                           />
                         </div>
                         {signers.length > 1 && (
@@ -254,18 +266,19 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRemoveSigner(index)}
+                            className="hover:bg-destructive/10 hover:text-destructive"
                           >
                             <XCircle className="h-4 w-4" />
                           </Button>
                         )}
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                   
                   <Button
                     variant="outline"
                     onClick={handleAddSigner}
-                    className="mt-3"
+                    className="mt-3 hover:bg-primary/10 hover:text-primary transition-colors duration-200"
                   >
                     <Users className="h-4 w-4 mr-2" />
                     Add Signer
@@ -280,6 +293,7 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
                 <Button 
                   onClick={handleSendForSignature}
                   disabled={sendProposal.isPending || signers.some(s => !s.name || !s.email)}
+                  className="btn-primary"
                 >
                   {sendProposal.isPending ? 'Sending...' : 'Send for Signature'}
                 </Button>
@@ -293,6 +307,7 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
             variant="outline"
             onClick={() => handleGetSigningUrl(proposal.client_email || '')}
             disabled={getSigningUrl.isPending}
+            className="hover:bg-primary/10 hover:text-primary transition-colors duration-200"
           >
             <ExternalLink className="h-4 w-4 mr-2" />
             {getSigningUrl.isPending ? 'Getting URL...' : 'Open Signing URL'}
@@ -302,14 +317,17 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
         {canVoid && (
           <Dialog open={isVoidDialogOpen} onOpenChange={setIsVoidDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="destructive">
+              <Button variant="destructive" className="hover:bg-destructive/90">
                 <XCircle className="h-4 w-4 mr-2" />
                 Void Signature
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Void E-Signature</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  <XCircle className="h-5 w-5 text-destructive" />
+                  Void E-Signature
+                </DialogTitle>
                 <DialogDescription>
                   This will cancel the signature process and mark the proposal as voided.
                 </DialogDescription>
@@ -323,7 +341,7 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
                     placeholder="Enter reason for voiding the signature..."
                     value={voidReason}
                     onChange={(e) => setVoidReason(e.target.value)}
-                    className="mt-1"
+                    className="mt-1 focus:ring-destructive/20"
                   />
                 </div>
               </div>
@@ -336,6 +354,7 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
                   variant="destructive"
                   onClick={handleVoidSignature}
                   disabled={voidSignature.isPending || !voidReason.trim()}
+                  className="hover:bg-destructive/90"
                 >
                   {voidSignature.isPending ? 'Voiding...' : 'Void Signature'}
                 </Button>
@@ -350,32 +369,42 @@ export function EsignatureFlow({ proposal, onStatusChange }: EsignatureFlowProps
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Clock className="h-5 w-5" />
-              <span>Signature Timeline</span>
+              <Clock className="h-5 w-5 text-primary" />
+              <span className="gradient-text-primary">Signature Timeline</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center space-x-3 p-4 bg-primary/10 rounded-lg border border-primary/20"
+              >
+                <div className="w-3 h-3 bg-primary rounded-full"></div>
                 <div>
-                  <p className="font-medium">Proposal sent for signature</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-foreground">Proposal sent for signature</p>
+                  <p className="text-sm text-muted-foreground">
                     {proposal.sent_at ? new Date(proposal.sent_at).toLocaleString() : 'Unknown'}
                   </p>
                 </div>
-              </div>
+              </motion.div>
               
               {proposal.esign_signed_at && (
-                <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="flex items-center space-x-3 p-4 bg-green-500/10 rounded-lg border border-green-500/20"
+                >
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <div>
-                    <p className="font-medium">Proposal signed</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-foreground">Proposal signed</p>
+                    <p className="text-sm text-muted-foreground">
                       {new Date(proposal.esign_signed_at).toLocaleString()}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               )}
             </div>
           </CardContent>

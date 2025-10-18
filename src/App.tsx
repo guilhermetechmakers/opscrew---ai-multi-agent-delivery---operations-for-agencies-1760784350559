@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/theme-provider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AuthMiddleware } from "@/components/auth/AuthMiddleware";
 import LandingPage from "@/pages/LandingPage";
@@ -42,8 +43,9 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
+      <ThemeProvider defaultTheme="dark" storageKey="opscrew-ui-theme">
+        <AuthProvider>
+          <BrowserRouter>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
@@ -121,7 +123,8 @@ export default function App() {
           </Routes>
           <Toaster />
         </BrowserRouter>
-      </AuthProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

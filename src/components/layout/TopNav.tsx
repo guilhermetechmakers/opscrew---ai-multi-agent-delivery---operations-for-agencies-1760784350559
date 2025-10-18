@@ -1,4 +1,4 @@
-import { Search, Bell, User, Plus, Settings, LogOut, HelpCircle, Moon, Sun, Monitor, ChevronDown, Zap, MessageSquare, GitBranch, Shield, Globe } from "lucide-react";
+import { Search, Bell, User, Plus, Settings, LogOut, HelpCircle, ChevronDown, Zap, MessageSquare, GitBranch, Shield, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,10 +9,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuGroup,
-  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -165,6 +165,9 @@ export function TopNav() {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
           {/* Enhanced User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -218,22 +221,6 @@ export function TopNav() {
                     <span>Help & Support</span>
                   </Link>
                 </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>Theme</DropdownMenuLabel>
-                <DropdownMenuCheckboxItem checked>
-                  <Monitor className="w-4 h-4 mr-2" />
-                  System
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>
-                  <Sun className="w-4 h-4 mr-2" />
-                  Light
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>
-                  <Moon className="w-4 h-4 mr-2" />
-                  Dark
-                </DropdownMenuCheckboxItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem 

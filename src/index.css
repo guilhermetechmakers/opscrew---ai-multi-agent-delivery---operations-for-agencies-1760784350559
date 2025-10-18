@@ -8,40 +8,40 @@
 /* OpsCrew Design System with CSS Custom Properties */
 @layer base {
   :root {
-    /* OpsCrew Color Palette - Dark Theme */
-    --background: 24 27 27; /* #181A1B */
-    --foreground: 255 255 255; /* #FFFFFF */
+    /* OpsCrew Color Palette - Light Theme */
+    --background: 255 255 255; /* #FFFFFF */
+    --foreground: 24 27 27; /* #181A1B */
     
-    --card: 34 36 38; /* #222426 */
-    --card-foreground: 255 255 255; /* #FFFFFF */
+    --card: 248 250 252; /* #F8FAFC */
+    --card-foreground: 24 27 27; /* #181A1B */
     
-    --popover: 34 36 38; /* #222426 */
-    --popover-foreground: 255 255 255; /* #FFFFFF */
+    --popover: 248 250 252; /* #F8FAFC */
+    --popover-foreground: 24 27 27; /* #181A1B */
     
     --primary: 83 183 255; /* #53B7FF */
-    --primary-foreground: 24 27 27; /* #181A1B */
+    --primary-foreground: 255 255 255; /* #FFFFFF */
     
-    --secondary: 38 40 42; /* #26282A */
-    --secondary-foreground: 163 167 172; /* #A3A7AC */
+    --secondary: 241 245 249; /* #F1F5F9 */
+    --secondary-foreground: 71 85 105; /* #475569 */
     
-    --muted: 38 40 42; /* #26282A */
-    --muted-foreground: 163 167 172; /* #A3A7AC */
+    --muted: 241 245 249; /* #F1F5F9 */
+    --muted-foreground: 100 116 139; /* #64748B */
     
     --accent: 83 183 255; /* #53B7FF */
-    --accent-foreground: 24 27 27; /* #181A1B */
+    --accent-foreground: 255 255 255; /* #FFFFFF */
     
-    --destructive: 255 119 132; /* #FF7784 */
-    --destructive-foreground: 24 27 27; /* #181A1B */
+    --destructive: 239 68 68; /* #EF4444 */
+    --destructive-foreground: 255 255 255; /* #FFFFFF */
     
-    --border: 38 40 42; /* #26282A */
-    --input: 38 40 42; /* #26282A */
+    --border: 226 232 240; /* #E2E8F0 */
+    --input: 226 232 240; /* #E2E8F0 */
     --ring: 83 183 255; /* #53B7FF */
     
     --radius: 0.5rem; /* 8px */
   }
   
   .dark {
-    /* Dark mode is the default, but keeping for consistency */
+    /* OpsCrew Color Palette - Dark Theme */
     --background: 24 27 27; /* #181A1B */
     --foreground: 255 255 255; /* #FFFFFF */
     

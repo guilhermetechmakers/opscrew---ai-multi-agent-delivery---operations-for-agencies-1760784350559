@@ -249,15 +249,15 @@ export function EsignatureAnalytics({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950 dark:to-indigo-950 border-purple-200 dark:border-purple-800">
+      <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <BarChart3 className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-xl">E-Signature Analytics</CardTitle>
+                <CardTitle className="text-xl gradient-text-primary">E-Signature Analytics</CardTitle>
                 <p className="text-sm text-muted-foreground">
                   Comprehensive insights into signature performance and trends
                 </p>
@@ -265,7 +265,7 @@ export function EsignatureAnalytics({
             </div>
             <div className="flex items-center space-x-2">
               <Select value={timeRange} onValueChange={onTimeRangeChange}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-32 focus:ring-primary/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -276,7 +276,7 @@ export function EsignatureAnalytics({
                   <SelectItem value="all">All time</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" onClick={onExport}>
+              <Button variant="outline" size="sm" onClick={onExport} className="hover:bg-primary/10 hover:text-primary">
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
@@ -294,16 +294,16 @@ export function EsignatureAnalytics({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="hover:shadow-lg transition-all duration-200">
+            <Card className="hover:shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-primary/5">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       {metric.title}
                     </p>
-                    <p className="text-2xl font-bold">{metric.value}</p>
+                    <p className="text-2xl font-bold text-foreground">{metric.value}</p>
                   </div>
-                  <div className={`p-3 rounded-lg ${metric.bgColor}`}>
+                  <div className={`p-3 rounded-lg ${metric.bgColor} group-hover:scale-110 transition-transform duration-200`}>
                     <div className={metric.color}>
                       {metric.icon}
                     </div>
