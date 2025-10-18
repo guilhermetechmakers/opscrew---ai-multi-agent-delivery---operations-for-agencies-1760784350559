@@ -13,7 +13,10 @@ import {
   Upload,
   Plus,
   Filter,
-  Search
+  Search,
+  Palette,
+  Bell,
+  Shield
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -117,11 +120,12 @@ export default function ClientPortal() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="comments">Comments</TabsTrigger>
             <TabsTrigger value="billing">Billing</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -319,6 +323,139 @@ export default function ClientPortal() {
               </CardHeader>
               <CardContent>
                 <BillingCard projectId={projectId!} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Portal Settings
+                </CardTitle>
+                <CardDescription>
+                  Configure your client portal appearance and behavior
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Appearance
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                        <span className="text-sm font-medium">Show Timeline</span>
+                        <div className="h-6 w-11 bg-secondary rounded-full flex items-center justify-end px-1">
+                          <div className="h-4 w-4 bg-primary rounded-full"></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                        <span className="text-sm font-medium">Show Documents</span>
+                        <div className="h-6 w-11 bg-primary rounded-full flex items-center justify-end px-1">
+                          <div className="h-4 w-4 bg-background rounded-full"></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                        <span className="text-sm font-medium">Show Comments</span>
+                        <div className="h-6 w-11 bg-primary rounded-full flex items-center justify-end px-1">
+                          <div className="h-4 w-4 bg-background rounded-full"></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                        <span className="text-sm font-medium">Show Billing</span>
+                        <div className="h-6 w-11 bg-primary rounded-full flex items-center justify-end px-1">
+                          <div className="h-4 w-4 bg-background rounded-full"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Permissions
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                        <span className="text-sm font-medium">Allow Comments</span>
+                        <div className="h-6 w-11 bg-primary rounded-full flex items-center justify-end px-1">
+                          <div className="h-4 w-4 bg-background rounded-full"></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                        <span className="text-sm font-medium">Allow Downloads</span>
+                        <div className="h-6 w-11 bg-primary rounded-full flex items-center justify-end px-1">
+                          <div className="h-4 w-4 bg-background rounded-full"></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                        <span className="text-sm font-medium">Require Approval</span>
+                        <div className="h-6 w-11 bg-secondary rounded-full flex items-center justify-start px-1">
+                          <div className="h-4 w-4 bg-muted-foreground rounded-full"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Bell className="h-4 w-4" />
+                    Notifications
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                      <span className="text-sm font-medium">Auto Notify</span>
+                      <div className="h-6 w-11 bg-primary rounded-full flex items-center justify-end px-1">
+                        <div className="h-4 w-4 bg-background rounded-full"></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                      <span className="text-sm font-medium">Email Notifications</span>
+                      <div className="h-6 w-11 bg-primary rounded-full flex items-center justify-end px-1">
+                        <div className="h-4 w-4 bg-background rounded-full"></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                      <span className="text-sm font-medium">Slack Notifications</span>
+                      <div className="h-6 w-11 bg-secondary rounded-full flex items-center justify-start px-1">
+                        <div className="h-4 w-4 bg-muted-foreground rounded-full"></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                      <span className="text-sm font-medium">Webhook URL</span>
+                      <Input 
+                        placeholder="https://hooks.slack.com/..." 
+                        className="w-48 text-xs"
+                        disabled
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Portal Status</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Last accessed: {portal.last_accessed_at ? 
+                          new Date(portal.last_accessed_at).toLocaleDateString() : 
+                          'Never'
+                        }
+                      </p>
+                    </div>
+                    <Badge 
+                      variant={portal.is_active ? "default" : "secondary"}
+                      className={portal.is_active ? "bg-green-500/10 text-green-500 border-green-500/20" : ""}
+                    >
+                      {portal.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

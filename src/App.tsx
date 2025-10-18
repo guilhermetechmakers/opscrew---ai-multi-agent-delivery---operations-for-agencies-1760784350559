@@ -83,6 +83,7 @@ export default function App() {
             
             {/* Client Portal Routes */}
             <Route path="/portal/:projectId" element={<ClientPortal />} />
+            <Route path="/portal/:projectId/settings" element={<ClientPortal />} />
             <Route path="/portal" element={<DashboardLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="techstart" element={<Dashboard />} />

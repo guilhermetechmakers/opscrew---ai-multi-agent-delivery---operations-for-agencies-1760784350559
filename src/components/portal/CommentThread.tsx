@@ -20,16 +20,14 @@ interface CommentThreadProps {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'pending':
-      return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-    case 'approved':
-      return 'bg-green-500/10 text-green-500 border-green-500/20';
-    case 'rejected':
-      return 'bg-red-500/10 text-red-500 border-red-500/20';
+    case 'open':
+      return 'bg-primary/10 text-primary border-primary/20';
     case 'resolved':
-      return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      return 'bg-green-500/10 text-green-500 border-green-500/20';
+    case 'closed':
+      return 'bg-secondary/50 text-muted-foreground border-border';
     default:
-      return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+      return 'bg-secondary/50 text-muted-foreground border-border';
   }
 };
 
@@ -39,12 +37,12 @@ const getCommentTypeIcon = (commentType: string) => {
       return '💬';
     case 'question':
       return '❓';
-    case 'bug_report':
-      return '🐛';
-    case 'feature_request':
+    case 'suggestion':
       return '💡';
-    case 'general':
-      return '💭';
+    case 'issue':
+      return '🐛';
+    case 'praise':
+      return '⭐';
     default:
       return '💬';
   }
@@ -93,19 +91,19 @@ export function CommentThread({ comment }: CommentThreadProps) {
   };
 
   return (
-    <Card className="group hover:shadow-md transition-all duration-200">
+    <Card className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 card-hover">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-10 w-10 ring-2 ring-primary/20">
               <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
-              <AvatarFallback>
+              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
                 {comment.author_name?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-sm">
+                <span className="font-semibold text-sm gradient-text">
                   {comment.author_name || 'Anonymous'}
                 </span>
                 <span className="text-xs text-muted-foreground">
@@ -122,7 +120,7 @@ export function CommentThread({ comment }: CommentThreadProps) {
                 >
                   {comment.status}
                 </Badge>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="outline" className="text-xs bg-secondary/50 text-muted-foreground border-border">
                   {comment.comment_type}
                 </Badge>
               </div>
@@ -134,21 +132,21 @@ export function CommentThread({ comment }: CommentThreadProps) {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-secondary/50"
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleEdit}>
+            <DropdownMenuContent align="end" className="bg-card border-border shadow-xl">
+              <DropdownMenuItem onClick={handleEdit} className="hover:bg-secondary/50">
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleFlag}>
+              <DropdownMenuItem onClick={handleFlag} className="hover:bg-secondary/50">
                 <Flag className="mr-2 h-4 w-4" />
                 Flag
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+              <DropdownMenuItem onClick={handleDelete} className="text-destructive hover:bg-destructive/10">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
@@ -173,7 +171,7 @@ export function CommentThread({ comment }: CommentThreadProps) {
                 variant="ghost"
                 size="sm"
                 onClick={handleLike}
-                className={`h-8 px-2 ${isLiked ? 'text-primary' : 'text-muted-foreground'}`}
+                className={`h-8 px-3 transition-all duration-200 hover:bg-secondary/50 hover:scale-105 ${isLiked ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
               >
                 <ThumbsUp className="h-3 w-3 mr-1" />
                 {comment.like_count || 0}
@@ -182,7 +180,7 @@ export function CommentThread({ comment }: CommentThreadProps) {
                 variant="ghost"
                 size="sm"
                 onClick={handleDislike}
-                className={`h-8 px-2 ${isDisliked ? 'text-destructive' : 'text-muted-foreground'}`}
+                className={`h-8 px-3 transition-all duration-200 hover:bg-secondary/50 hover:scale-105 ${isDisliked ? 'text-destructive bg-destructive/10' : 'text-muted-foreground'}`}
               >
                 <ThumbsDown className="h-3 w-3 mr-1" />
                 {comment.dislike_count || 0}
@@ -191,7 +189,7 @@ export function CommentThread({ comment }: CommentThreadProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsReplying(!isReplying)}
-                className="h-8 px-2"
+                className="h-8 px-3 transition-all duration-200 hover:bg-secondary/50 hover:scale-105"
               >
                 <Reply className="h-3 w-3 mr-1" />
                 Reply

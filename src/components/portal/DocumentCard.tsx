@@ -18,16 +18,18 @@ interface DocumentCardProps {
 
 const getFileIcon = (documentType: string) => {
   switch (documentType) {
-    case 'image':
+    case 'proposal':
+      return FileText;
+    case 'sow':
+      return FileText;
+    case 'design':
       return Image;
-    case 'video':
+    case 'tutorial':
       return Video;
-    case 'audio':
-      return Music;
-    case 'archive':
-      return Archive;
-    case 'code':
-      return Code;
+    case 'report':
+      return FileText;
+    case 'other':
+      return FileText;
     default:
       return FileText;
   }
@@ -35,18 +37,20 @@ const getFileIcon = (documentType: string) => {
 
 const getFileTypeColor = (documentType: string) => {
   switch (documentType) {
-    case 'image':
-      return 'bg-green-500/10 text-green-500 border-green-500/20';
-    case 'video':
-      return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-    case 'audio':
-      return 'bg-pink-500/10 text-pink-500 border-pink-500/20';
-    case 'archive':
-      return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
-    case 'code':
+    case 'proposal':
+      return 'bg-primary/10 text-primary border-primary/20';
+    case 'sow':
       return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+    case 'design':
+      return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+    case 'tutorial':
+      return 'bg-green-500/10 text-green-500 border-green-500/20';
+    case 'report':
+      return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+    case 'other':
+      return 'bg-secondary/50 text-muted-foreground border-border';
     default:
-      return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+      return 'bg-secondary/50 text-muted-foreground border-border';
   }
 };
 
@@ -67,22 +71,22 @@ export function DocumentCard({ document }: DocumentCardProps) {
 
   return (
     <Card 
-      className="group relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20"
+      className="group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02] card-hover"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg border ${typeColorClass}`}>
+            <div className={`p-3 rounded-xl border-2 shadow-sm ${typeColorClass} transition-all duration-200 group-hover:shadow-md`}>
               <FileIcon className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-sm font-medium truncate">
+              <CardTitle className="text-sm font-semibold truncate gradient-text">
                 {document.title}
               </CardTitle>
-              <CardDescription className="text-xs text-muted-foreground">
-                {document.description || 'No description'}
+              <CardDescription className="text-xs text-muted-foreground mt-1">
+                {document.description || 'No description available'}
               </CardDescription>
             </div>
           </div>
@@ -91,17 +95,17 @@ export function DocumentCard({ document }: DocumentCardProps) {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className={`h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200`}
+                className={`h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-secondary/50`}
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handlePreview}>
+            <DropdownMenuContent align="end" className="bg-card border-border shadow-xl">
+              <DropdownMenuItem onClick={handlePreview} className="hover:bg-secondary/50">
                 <Eye className="mr-2 h-4 w-4" />
                 Preview
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDownload}>
+              <DropdownMenuItem onClick={handleDownload} className="hover:bg-secondary/50">
                 <Download className="mr-2 h-4 w-4" />
                 Download
               </DropdownMenuItem>
@@ -142,11 +146,11 @@ export function DocumentCard({ document }: DocumentCardProps) {
           )}
 
           {/* Action buttons */}
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2 pt-3">
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1"
+              className="flex-1 hover:bg-secondary/50 transition-all duration-200 hover:scale-105"
               onClick={handlePreview}
             >
               <Eye className="h-3 w-3 mr-1" />
@@ -154,7 +158,7 @@ export function DocumentCard({ document }: DocumentCardProps) {
             </Button>
             <Button 
               size="sm" 
-              className="flex-1"
+              className="flex-1 btn-primary transition-all duration-200 hover:scale-105"
               onClick={handleDownload}
             >
               <Download className="h-3 w-3 mr-1" />
