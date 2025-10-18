@@ -1,0 +1,18 @@
+{
+  "migration_name": "20241213120000_create_user_profiles_and_sessions",
+  "created_at": "2024-12-13T12:00:00Z",
+  "description": "Create user profiles, sessions, 2FA secrets, and token management tables for authentication system",
+  "tables_created": [
+    "user_profiles",
+    "user_sessions", 
+    "user_2fa_secrets",
+    "password_reset_tokens",
+    "email_verification_tokens"
+  ],
+  "tables_modified": [],
+  "tables_deleted": [],
+  "breaking_changes": false,
+  "rollback_sql": "DROP TABLE IF EXISTS email_verification_tokens CASCADE; DROP TABLE IF EXISTS password_reset_tokens CASCADE; DROP TABLE IF EXISTS user_2fa_secrets CASCADE; DROP TABLE IF EXISTS user_sessions CASCADE; DROP TABLE IF EXISTS user_profiles CASCADE; DROP FUNCTION IF EXISTS create_user_profile() CASCADE; DROP FUNCTION IF EXISTS cleanup_expired_sessions() CASCADE; DROP FUNCTION IF EXISTS cleanup_expired_tokens() CASCADE;",
+  "estimated_rows": 0,
+  "requires_downtime": false
+}
